@@ -31,16 +31,18 @@ AGL_MANAGED_STORE=0 AGL_CURRENT_ROLE=runner python train_calc_agent.py --externa
 import argparse
 import os
 from datetime import datetime
+from importlib.metadata import version
 from typing import Any, Dict, Optional, cast
 
 from calc_agent import MathProblem, calc_agent
 from datasets import Dataset as HuggingFaceDataset
+from packaging import version as packaging_version
 
 import agentlightning as agl
 
 
 def verl_default_config() -> Dict[str, Any]:
-    return {
+    config = {
         "algorithm": {
             "adv_estimator": "grpo",
             "use_kl_in_reward": False,
@@ -58,13 +60,6 @@ def verl_default_config() -> Dict[str, Any]:
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
                 "gpu_memory_utilization": 0.6,
-                # for verl 0.6.0
-                "engine_kwargs": {
-                    "vllm": {
-                        "enable_auto_tool_choice": True,
-                        "tool_call_parser": "hermes",
-                    },
-                },
             },
             "actor": {
                 "ppo_mini_batch_size": 32,
@@ -103,6 +98,15 @@ def verl_default_config() -> Dict[str, Any]:
             "total_epochs": 2,
         },
     }
+    installed_verl = version("verl")
+    if packaging_version.parse(installed_verl) >= packaging_version.parse("0.6.0"):
+        config["actor_rollout_ref"]["rollout"]["engine_kwargs"] = {
+            "vllm": {
+                "enable_auto_tool_choice": True,
+                "tool_call_parser": "hermes",
+            },
+        }
+    return config
 
 
 def train(
