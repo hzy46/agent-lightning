@@ -58,6 +58,13 @@ def verl_default_config() -> Dict[str, Any]:
                 "multi_turn": {"format": "hermes"},
                 "name": "vllm",
                 "gpu_memory_utilization": 0.6,
+                # for verl 0.6.0
+                "engine_kwargs": {
+                    "vllm": {
+                        "enable_auto_tool_choice": True,
+                        "tool_call_parser": "hermes",
+                    },
+                },
             },
             "actor": {
                 "ppo_mini_batch_size": 32,
