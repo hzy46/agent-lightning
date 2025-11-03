@@ -148,8 +148,6 @@ def train(
         config["actor_rollout_ref"]["model"]["lora_alpha"] = 32
         config["actor_rollout_ref"]["model"]["target_modules"] = "all-linear"
         config["actor_rollout_ref"]["actor"]["optim"]["lr"] = 2e-5
-        # For demo purpose only. Please adjust according to your total GPU memory.
-        config["actor_rollout_ref"]["rollout"]["gpu_memory_utilization"] = 0.2
 
     # CI toggle keeps everything else the same but you can tweak the lightweight bits here if desired
     if ci or ci_fast:
