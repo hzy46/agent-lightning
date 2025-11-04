@@ -210,8 +210,8 @@ def main():
     parser.add_argument("--llm-proxy", action="store_true", help="Enable LLM Proxy tracing/adapter")
     parser.add_argument("--ci", action="store_true", help="Run a minimal CI-style training loop")
     parser.add_argument("--lora", action="store_true", help="Whether to use LoRA")
-    parser.add_argument("--lora-lr", default=2e-5, type="float", help="LoRA lr")
-    parser.add_argument("--lora-rank", default=32, type="float", help="LoRA rank")
+    parser.add_argument("--lora-lr", default=2e-5, type=float, help="LoRA lr")
+    parser.add_argument("--lora-rank", default=32, type=int, help="LoRA rank")
     parser.add_argument(
         "--ci-fast", action="store_true", help="Limit the training loop to a single step (implies --ci)"
     )
