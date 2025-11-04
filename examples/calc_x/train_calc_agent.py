@@ -116,6 +116,7 @@ def train(
     n_runners: int,
     external_store_address: str,
     lora: bool,
+    lora_lr: float,
 ):
     """The training entrypoint function for Calc-X agent with VERL algorithm.
 
@@ -147,7 +148,7 @@ def train(
         config["actor_rollout_ref"]["model"]["lora_rank"] = 32
         config["actor_rollout_ref"]["model"]["lora_alpha"] = 32
         config["actor_rollout_ref"]["model"]["target_modules"] = "all-linear"
-        config["actor_rollout_ref"]["actor"]["optim"]["lr"] = 2e-5
+        config["actor_rollout_ref"]["actor"]["optim"]["lr"] = lora_lr
 
     # CI toggle keeps everything else the same but you can tweak the lightweight bits here if desired
     if ci or ci_fast:
@@ -207,6 +208,7 @@ def main():
     parser.add_argument("--llm-proxy", action="store_true", help="Enable LLM Proxy tracing/adapter")
     parser.add_argument("--ci", action="store_true", help="Run a minimal CI-style training loop")
     parser.add_argument("--lora", action="store_true", help="Whether to use LoRA")
+    parser.add_argument("--lora-lr", default=2e-5, type="float", help="LoRA lr")
     parser.add_argument(
         "--ci-fast", action="store_true", help="Limit the training loop to a single step (implies --ci)"
     )
@@ -241,6 +243,7 @@ def main():
         n_runners=args.n_runners,
         external_store_address=args.external_store_address,
         lora=args.lora,
+        lora_lr=args.lora_lr,
     )
 
 
