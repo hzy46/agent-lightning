@@ -246,6 +246,7 @@ def main():
         n_runners=args.n_runners,
         external_store_address=args.external_store_address,
         lora=args.lora,
+        lora_rank=args.lora_rank,
         lora_lr=args.lora_lr,
     )
 
