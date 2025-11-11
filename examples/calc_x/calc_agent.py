@@ -72,7 +72,7 @@ async def calc_agent(task: MathProblem, llm: agl.LLM) -> None:
     You can choose either way, but not both.
     """
 
-    calculator_mcp_server = StdioServerParams(command="uvx", args=["mcp-server-calculator"])
+    calculator_mcp_server = StdioServerParams(command="uvx", args=["mcp-server-calculator"], read_timeout_seconds=60)
 
     async with McpWorkbench(calculator_mcp_server) as workbench:
         calc_agent = autogen_assistant_agent(
