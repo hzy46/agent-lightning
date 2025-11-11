@@ -115,6 +115,8 @@ def train(
     ci_fast: bool,
     n_runners: int,
     external_store_address: str,
+    is_balance_batch: bool,
+    is_reorder_transition: bool,
 ):
     """The training entrypoint function for Calc-X agent with VERL algorithm.
 
@@ -141,6 +143,12 @@ def train(
 
     if model:
         config["actor_rollout_ref"]["model"]["path"] = model
+
+    config["trainer"]["balance_batch"] = is_balance_batch
+    config["trainer"]["is_reorder_transition"] = is_reorder_transition
+    config["trainer"][
+        "experiment_name"
+    ] = f"calc_x_is_balance_batch{is_balance_batch}_is_reorder_transition{is_reorder_transition}"
 
     # CI toggle keeps everything else the same but you can tweak the lightweight bits here if desired
     if ci or ci_fast:
@@ -192,6 +200,16 @@ def train(
     trainer.fit(calc_agent, train_dataset, val_dataset=val_dataset)
 
 
+def str2bool(s):
+    s = s.strip()
+    if s.lower() == "true":
+        return True
+    elif s.lower() == "false":
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train a math calc agent with Agent-lightning + VERL.")
     parser.add_argument("--train-file", type=str, default="data/train.parquet", help="Path to train parquet file")
@@ -209,6 +227,8 @@ def main():
         default="",
         help="Connect to an external store instead of creating a new one in memory",
     )
+    parser.add_argument("--is-balance-batch", type=str, default="True")
+    parser.add_argument("--is-reorder-transition", type=str, default="True")
 
     args = parser.parse_args()
 
@@ -232,6 +252,8 @@ def main():
         ci_fast=args.ci_fast,
         n_runners=args.n_runners,
         external_store_address=args.external_store_address,
+        is_balance_batch=str2bool(args.is_balance_batch),
+        is_reorder_transition=str2bool(args.is_reorder_transition),
     )
 
 
