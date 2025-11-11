@@ -149,6 +149,7 @@ def train(
     config["trainer"][
         "experiment_name"
     ] = f"calc_x_is_balance_batch{is_balance_batch}_is_reorder_transition{is_reorder_transition}"
+    config["trainer"]["val_before_train"] = False
 
     # CI toggle keeps everything else the same but you can tweak the lightweight bits here if desired
     if ci or ci_fast:
