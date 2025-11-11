@@ -340,7 +340,6 @@ class AgentLightningTrainer(RayPPOTrainer):
                 turn_indices = batch.non_tensor_batch["turn_index_list"]
                 sorted_indices = sorted(range(len(rollout_ids)), key=lambda i: (rollout_ids[i], turn_indices[i]))
                 batch.reorder(torch.tensor(sorted_indices).type(torch.int32))
-                breakpoint()
 
             # Agent mode note: Change the order of balance batch;
             #     1. first calculate advantage
@@ -351,8 +350,6 @@ class AgentLightningTrainer(RayPPOTrainer):
             # Please take care when you implement group based adv computation such as GRPO and rloo
             if not (self.config.trainer.is_sort_by_rollout) and self.config.trainer.balance_batch:
                 self._balance_batch(batch, metrics=metrics)
-
-            breakpoint()
 
             # update critic
             if self.use_critic:
