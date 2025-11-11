@@ -326,7 +326,6 @@ class AgentLightningTrainer(RayPPOTrainer):
                 batch.batch["is_drop_mask"].shape[0] - keep_indices.shape[0]
             )
             batch = batch[keep_indices]
-            # next, round to minibatch size
             mini_batch_size = self.config.actor_rollout_ref.actor.ppo_mini_batch_size
             n_transition = len(batch)
             random_indices = list(range(n_transition))
@@ -336,6 +335,13 @@ class AgentLightningTrainer(RayPPOTrainer):
             batch = batch[list(range(n_remained_transition))]
             metrics["training/n_triplets_dropped_remainder"] = n_transition - n_remained_transition
 
+            if self.config.trainer.is_sort_by_rollout:
+                rollout_ids = batch.non_tensor_batch["rollout_id_list"]
+                turn_indices = batch.non_tensor_batch["turn_index_list"]
+                sorted_indices = sorted(range(len(rollout_ids)), key=lambda i: (rollout_ids[i], turn_indices[i]))
+                batch.reorder(torch.tensor(sorted_indices).type(torch.int32))
+                breakpoint()
+
             # Agent mode note: Change the order of balance batch;
             #     1. first calculate advantage
             #     2. then drop the samples (too long prompt & floor to ppo minisize)
@@ -343,9 +349,10 @@ class AgentLightningTrainer(RayPPOTrainer):
             # balance the number of valid tokens on each dp rank.
             # Note that this breaks the order of data inside the batch.
             # Please take care when you implement group based adv computation such as GRPO and rloo
-            breakpoint()
-            if self.config.trainer.balance_batch:
+            if not (self.config.trainer.is_sort_by_rollout) and self.config.trainer.balance_batch:
                 self._balance_batch(batch, metrics=metrics)
+
+            breakpoint()
 
             # update critic
             if self.use_critic:
