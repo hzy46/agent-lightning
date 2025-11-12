@@ -97,9 +97,9 @@ def verl_default_config() -> Dict[str, Any]:
             "project_name": "AgentLightning",
             "experiment_name": "calc_x",
             "nnodes": 1,
-            "save_freq": 64,
+            "save_freq": 6400,
             "test_freq": 32,
-            "total_epochs": 2,
+            "total_epochs": 4,
         },
     }
     return config
