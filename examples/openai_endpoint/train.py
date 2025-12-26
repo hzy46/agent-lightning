@@ -13,7 +13,7 @@ verl_config = {
         "use_kl_in_reward": False,
     },
     "data": {
-        "train_batch_size": 128,
+        "train_batch_size": 64,
         "max_prompt_length": 512,
         "max_response_length": 1024,
     },
