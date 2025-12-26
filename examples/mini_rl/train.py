@@ -103,7 +103,7 @@ async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
         api_key="dummy",
         base_url=openai_base_url,
     )
-    regex_pattern = r"####\s*ANSWER:\s*(.+?)(\s*####|$)"
+    regex_pattern = r"####\s*(.+)(\s*|$)"
     try:
         prompt = prompt_template.format(task["question"])
         messages = [{"role": "user", "content": prompt}]
