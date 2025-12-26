@@ -136,7 +136,9 @@ async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
 
     # Log some responses for better clarity
     if random.random() < 0.01:
-        print(f"Question: {task['question']}\nResponse: {last_message}\nGround Truth: {gt_answer}\nReward: {reward}")
+        print(
+            f"--------\nQuestion: {task['question']}\nResponse: {last_message}\nGround Truth: {gt_answer}\nReward: {reward}\n"
+        )
 
 
 if __name__ == "__main__":
