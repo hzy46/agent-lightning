@@ -71,8 +71,8 @@ verl_config = {
 
 
 class Gsm8kProblem(TypedDict):
-    question: str  # The math problem for the agent to solve
-    answer: str  # Step-by-step solution (not used in training)
+    question: str
+    answer: str
 
 
 ds = load_dataset("openai/gsm8k", "main")
@@ -105,7 +105,7 @@ async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
     )
     regex_pattern = r"####\s*ANSWER:\s*(.+?)(\s*####|$)"
     try:
-        prompt = prompt_template.format(task.question)
+        prompt = prompt_template.format(task["question"])
         messages = [{"role": "user", "content": prompt}]
         response = await client.chat.completions.create(
             model=model,
@@ -122,7 +122,7 @@ async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
     except Exception as e:
         print("Failure:", str(e))
         answer = "None"
-    gt_answer = re.search(regex_pattern, task.answer).group(1)
+    gt_answer = re.search(regex_pattern, task["answer"]).group(1)
     if gt_answer == answer:
         reward = 1
     else:
