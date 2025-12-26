@@ -1,3 +1,4 @@
+import random
 import re
 from typing import TypedDict, cast
 
@@ -75,8 +76,6 @@ class Gsm8kProblem(TypedDict):
     answer: str
 
 
-ds = load_dataset("openai/gsm8k", "main")
-
 prompt_template = """
 You are given the following question:
 
@@ -90,20 +89,22 @@ Output example:
 #### <your answer>
 """.strip()
 
-train_dataset = cast(agl.Dataset[Gsm8kProblem], ds["train"].to_list())
-val_dataset = cast(agl.Dataset[Gsm8kProblem], ds["test"].to_list())
-
 
 @agl.rollout
 async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
+    # Collect llm endpoint information
+    # Temperature will be different for rollout and validation.
     model = llm.model
     openai_base_url = llm.endpoint
     temperature = llm.sampling_parameters.get("temperature", 1.0)
+
     client = AsyncOpenAI(
         api_key="dummy",
         base_url=openai_base_url,
     )
     regex_pattern = r"####\s*(.+)(\s*|$)"
+
+    # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
         prompt = prompt_template.format(task["question"])
         messages = [{"role": "user", "content": prompt}]
@@ -123,20 +124,36 @@ async def gsm8k_agent(task: Gsm8kProblem, llm: agl.LLM) -> None:
         print("Failure:", str(e))
         answer = "None"
     gt_answer = re.search(regex_pattern, task["answer"]).group(1)
+
+    # Exact matching for verifiable rewards
     if gt_answer == answer:
         reward = 1
     else:
         reward = 0
+
+    # This reward will be tracked automatically
     agl.emit_reward(reward)
 
+    # Log some responses for better clarity
+    if random.random() < 0.01:
+        print(f"Question: {task['question']}\nResponse: {last_message}\nGround Truth: {gt_answer}\nReward: {reward}")
 
-algorithm = agl.VERL(verl_config)
-n_runners = 24
 
-# this tracer is a dummy one, as currently tracing is done in the proxy part
-tracer = agl.OtelTracer()
-adapter = agl.LlmProxyTraceToTriplet()
-# set store=None to use
-trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
+if __name__ == "__main__":
+    # Create dataset for training and validation
+    ds = load_dataset("openai/gsm8k", "main")
+    train_dataset = cast(agl.Dataset[Gsm8kProblem], ds["train"].to_list())
+    val_dataset = cast(agl.Dataset[Gsm8kProblem], ds["test"].to_list())
 
-trainer.fit(gsm8k_agent, train_dataset, val_dataset=val_dataset)
+    algorithm = agl.VERL(verl_config)
+    # Number of agents launched in parallel to query the LLM.
+    # This parameter strongly affects throughput and efficiency:
+    # higher parallelism improves utilization but increases GPU overhead.
+    n_runners = 32
+    # This tracer is a dummy one, as currently tracing is done in the llm proxy part
+    tracer = agl.OtelTracer()
+    adapter = agl.LlmProxyTraceToTriplet()
+    # Set store=None to use managed store
+    trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
+
+    trainer.fit(gsm8k_agent, train_dataset, val_dataset=val_dataset)
