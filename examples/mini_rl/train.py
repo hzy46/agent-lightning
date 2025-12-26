@@ -91,7 +91,7 @@ Output example:
 """.strip()
 
 train_dataset = cast(agl.Dataset[Gsm8kProblem], ds["train"].to_list())
-test_dataset = cast(agl.Dataset[Gsm8kProblem], ds["test"].to_list())
+val_dataset = cast(agl.Dataset[Gsm8kProblem], ds["test"].to_list())
 
 
 @agl.rollout
