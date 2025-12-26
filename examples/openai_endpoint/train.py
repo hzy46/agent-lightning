@@ -12,14 +12,14 @@ verl_config = {
         "use_kl_in_reward": False,
     },
     "data": {
-        "train_batch_size": 32,
+        "train_batch_size": 128,
         "max_prompt_length": 512,
         "max_response_length": 1024,
     },
     "actor_rollout_ref": {
         "rollout": {
             "tensor_model_parallel_size": 1,
-            "n": 4,
+            "n": 8,
             "log_prob_micro_batch_size_per_gpu": 4,
             "multi_turn": {"format": "hermes"},
             "name": "vllm",
@@ -33,7 +33,7 @@ verl_config = {
         },
         "actor": {
             "ppo_mini_batch_size": 32,
-            "ppo_micro_batch_size_per_gpu": 4,
+            "ppo_micro_batch_size_per_gpu": 8,
             "optim": {"lr": 1e-6},
             "use_kl_loss": False,
             "kl_loss_coef": 0.0,
@@ -57,14 +57,14 @@ verl_config = {
     },
     "trainer": {
         "n_gpus_per_node": 1,
-        "val_before_train": True,
+        "val_before_train": False,
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "AgentLightning",
         "experiment_name": "mini_rl_gsm8k",
         "nnodes": 1,
-        "save_freq": 64,
-        "test_freq": 32,
+        "save_freq": 500,
+        "test_freq": 25,
         "total_epochs": 2,
     },
 }
