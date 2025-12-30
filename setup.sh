@@ -49,7 +49,7 @@ pip install tensordict==0.6.2 torchdata==0.11.0 agentops==0.4.14
 pip install "autogen-agentchat" "autogen-ext[openai]"
 pip install flask mcp
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bash
+source ~/.bashrc
 
 cd ~/agent-lightning/
 pip install -e .
