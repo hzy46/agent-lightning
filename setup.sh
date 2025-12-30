@@ -51,5 +51,7 @@ pip install flask mcp
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
 
+conda activate agl
+
 cd ~/agent-lightning/
 pip install -e .
