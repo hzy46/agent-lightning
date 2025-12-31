@@ -15,7 +15,7 @@ verl_config = {
         "use_kl_in_reward": False,
     },
     "data": {
-        "train_batch_size": 32,
+        "train_batch_size": 16,
         "max_prompt_length": 4096,
         "max_response_length": 1024,
     },
@@ -35,8 +35,8 @@ verl_config = {
             },
         },
         "actor": {
-            "ppo_mini_batch_size": 32,
-            "ppo_micro_batch_size_per_gpu": 4,
+            "ppo_mini_batch_size": 64,
+            "ppo_micro_batch_size_per_gpu": 8,
             "optim": {"lr": 1e-6},
             "use_kl_loss": False,
             "kl_loss_coef": 0.0,
@@ -60,7 +60,7 @@ verl_config = {
     },
     "trainer": {
         "n_gpus_per_node": 4,
-        "val_before_train": True,
+        "val_before_train": False,
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "ParallelAgent",
