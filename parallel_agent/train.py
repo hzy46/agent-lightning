@@ -115,13 +115,13 @@ if __name__ == "__main__":
             test_sample_list.append(j)
 
     train_dataset = cast(agl.Dataset[KVProblem], train_sample_list)
-    val_dataset = cast(agl.Dataset[KVProblem], test_sample_list)
+    val_dataset = cast(agl.Dataset[KVProblem], test_sample_list[:100])
 
     algorithm = agl.VERL(verl_config)
     # Number of agents launched in parallel to query the LLM.
     # This parameter strongly affects throughput and efficiency:
     # higher parallelism improves utilization but increases GPU overhead.
-    n_runners = 64
+    n_runners = 32
     # This tracer is a dummy one, as currently tracing is done in the llm proxy part
     tracer = agl.OtelTracer()
     adapter = agl.LlmProxyTraceToTriplet()
