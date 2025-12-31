@@ -105,12 +105,12 @@ if __name__ == "__main__":
     test_path = os.path.join(dataset_dir, "test.jsonl")
 
     train_sample_list = []
-    with jsonlines.read(train_path) as reader:
+    with jsonlines.open(train_path) as reader:
         for j in reader:
             train_sample_list.append(j)
 
     test_sample_list = []
-    with jsonlines.read(test_path) as reader:
+    with jsonlines.open(test_path) as reader:
         for j in reader:
             test_sample_list.append(j)
 
