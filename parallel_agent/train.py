@@ -6,6 +6,8 @@ from datasets import load_dataset
 from openai import AsyncOpenAI
 import agentlightning as agl
 from agent_pipeline import run_query_pipeline
+import jsonlines
+import os
 
 verl_config = {
     "algorithm": {
