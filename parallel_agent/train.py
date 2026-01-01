@@ -35,8 +35,8 @@ verl_config = {
             },
         },
         "actor": {
-            "ppo_mini_batch_size": 256,
-            "ppo_micro_batch_size_per_gpu": 32,
+            "ppo_mini_batch_size": 128,
+            "ppo_micro_batch_size_per_gpu": 8,
             "optim": {"lr": 1e-6},
             "use_kl_loss": False,
             "kl_loss_coef": 0.0,

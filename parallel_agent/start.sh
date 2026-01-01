@@ -2,7 +2,7 @@ ray stop
 
 # export NCCL_SHM_DISABLE=1 可以生效，但是很慢。
 # export NCCL_SHM_DISABLE=1
-
+# NCCL_CUMEM_HOST_ENABLE 也可以生效
 
 # export NCCL_IGNORE_DISABLED_P2P=1
 # export NCCL_P2P_DISABLE=1
