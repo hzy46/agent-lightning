@@ -100,7 +100,7 @@ async def kv_agent(task: KVProblem, llm: agl.LLM) -> None:
 
 
 if __name__ == "__main__":
-    dataset_dir = os.path.expanduser("~/parallel_agent_easy")
+    dataset_dir = os.path.expanduser("~/parallel_agent_with_hard")
     train_path = os.path.join(dataset_dir, "train.jsonl")
     test_path = os.path.join(dataset_dir, "test.jsonl")
 
