@@ -1,1 +1,3 @@
-python llm070.py --model Qwen/Qwen2.5-7B-Instruct-1M --tp 1
+model=$1
+tp=$2
+python llm070.py --model $model --tp $tp

@@ -37,11 +37,11 @@ def main(
     model="Qwen/Qwen2.5-7B-Instruct-1M",
     method="normal",
     tasks = [
-        # "niah_single_1",
-        # "niah_single_2",
-        # "niah_single_3",
-        # "niah_multikey_1",
-        # "niah_multikey_2",
+        "niah_single_1",
+        "niah_single_2",
+        "niah_single_3",
+        "niah_multikey_1",
+        "niah_multikey_2",
         "niah_multikey_3",
         "niah_multivalue",
         "niah_multiquery",
@@ -50,10 +50,10 @@ def main(
         "qa_1",
     ],
     context_length_strs=[
-        # "8K",
+        "32K",
         "64K",
-        # "128K",
-        # "256K",
+        "128K",
+        "256K",
     ],
     save_root_dir="results/",
 ):
@@ -87,8 +87,8 @@ def main(
             # time.sleep(5)
             break
 
-    for task in tasks:
-        for context_length_str in context_length_strs:
+    for context_length_str in context_length_strs:
+        for task in tasks:
             print(f"task: {task} length: {context_length_str}")
             context_length_num = context_length_str_to_num[context_length_str]
             task_path = os.path.join(base_dir, f"eval_{task}_{context_length_num}.json")

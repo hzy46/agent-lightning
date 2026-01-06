@@ -78,6 +78,7 @@ async def _memagent_async_get_pred_for_sample(api_root_url, sample, model, token
     context = sample["context"].strip()
     prompt = sample['input'].strip()
     session = await get_async_client()
+    history_memory_list = []
     async with session:
         input_ids = tokenizer.encode(context)
         memory = mem_agent_no_memory
@@ -98,15 +99,16 @@ async def _memagent_async_get_pred_for_sample(api_root_url, sample, model, token
                     status = resp.status
                     if status!= 200:
                         print(f"{status=}, {model=}")
-                        return ''
+                        return '', history_memory_list
                     data = await resp.json()
                     memory, _ = extract_solution(data['choices'][0]['message']['content'])
+                    history_memory_list.append(memory)
             except KeyboardInterrupt as e:
                 raise e
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                return ''
+                return '', history_memory_list
         msg = memagent_template_final.format(prompt=prompt, memory=memory)
         try:
             async with session.post(
@@ -122,18 +124,19 @@ async def _memagent_async_get_pred_for_sample(api_root_url, sample, model, token
                 status = resp.status
                 if status!= 200:
                     print(f"{status=}, {model=}")
-                    return ''
+                    return '', history_memory_list
                 data = await resp.json()
-                return data['choices'][0]['message']['content']
+                return data['choices'][0]['message']['content'], history_memory_list
         except KeyboardInterrupt as e:
             raise e
         except Exception as e:
             import traceback
             traceback.print_exc()
-        return ''
+        return '', history_memory_list
 
 async def memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p):
-    response = await _memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p)
+    response, history_memory_list = await _memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p)
+    sample["history_memory_list"] = history_memory_list
     sample["response"] = response
 
 
