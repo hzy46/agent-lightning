@@ -8,7 +8,7 @@ pip install vllm==0.8.2
 pip install "ray[serve]" fire
 
 sudo apt update
-sudo apt install aria2
+sudo apt install -y aria2
 bash hfd.sh BytedTsinghua-SIA/hotpotqa --dataset --tool aria2c -x 10 --local-dir ~/ruler_from_memagent
 
 # start llm like
