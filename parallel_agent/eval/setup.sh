@@ -5,7 +5,7 @@ conda init
 source ~/.bashrc
 conda activate vllm
 pip install vllm==0.8.2
-pip install "ray[serve]"
+pip install "ray[serve]" fire
 
 sudo apt update
 sudo apt install aria2
