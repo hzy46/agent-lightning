@@ -1,5 +1,6 @@
 import requests
 import aiohttp
+import os
 
 async def get_async_client():
     return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
