@@ -1,6 +1,6 @@
 conda tos accept --override-channels --channel  https://repo.anaconda.com/pkgs/main
 conda tos accept --override-channels --channel  https://repo.anaconda.com/pkgs/r
-conda create -n vllm python=3.10
+conda create -y -n vllm python=3.10
 conda init
 source ~/.bashrc
 conda activate vllm
