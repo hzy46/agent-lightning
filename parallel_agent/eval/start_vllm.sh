@@ -1,0 +1,1 @@
+python llm070.py --model Qwen/Qwen2.5-7B-Instruct-1M --tp 1

@@ -69,10 +69,10 @@ Your answer:
 mem_agent_no_memory = "No previous memory"
 
 
-async def _memagent_async_get_pred_for_sample(sample, model, tokenizer, temperature, top_p):
+async def _memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p):
     RECURRENT_CHUNK_SIZE = 5000
     RECURRENT_MAX_NEW = 1024
-    API_KEY = dummy
+    API_KEY = "dummy"
 
     context = sample["context"].strip()
     prompt = sample['input'].strip()
@@ -85,7 +85,7 @@ async def _memagent_async_get_pred_for_sample(sample, model, tokenizer, temperat
             msg = memagent_template.format(prompt=prompt, chunk=tokenizer.decode(chunk), memory=memory)
             try:
                 async with session.post(
-                    url=URL + "/chat/completions",
+                    url= api_root_url + "/chat/completions",
                     headers={"Authorization": f"Bearer {API_KEY}"},
                     json=dict(model=model,
                         messages=[{"role": "user", "content": msg}],
@@ -109,7 +109,7 @@ async def _memagent_async_get_pred_for_sample(sample, model, tokenizer, temperat
         msg = memagent_template_final.format(prompt=prompt, memory=memory)
         try:
             async with session.post(
-                url=URL + "/chat/completions",
+                url= api_root_url + "/chat/completions",
                 headers={"Authorization": f"Bearer {API_KEY}"},
                 json=dict(model=model,
                     messages=[{"role": "user", "content": msg}],
@@ -131,8 +131,8 @@ async def _memagent_async_get_pred_for_sample(sample, model, tokenizer, temperat
             traceback.print_exc()
         return ''
 
-async def memagent_async_get_pred_for_sample(sample, model, tokenizer, temperature, top_p):
-    response = await _memagent_async_get_pred_for_sample(sample, model, tokenizer, temperature, top_p)
+async def memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p):
+    response = await _memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, temperature, top_p)
     sample["response"] = response
 
 

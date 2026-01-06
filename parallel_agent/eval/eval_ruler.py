@@ -15,6 +15,7 @@ from utils import score_func
 
 async def sem_memagent_call(
     semaphore,
+    api_root_url,
     sample,
     model,
     tokenizer,
@@ -23,6 +24,7 @@ async def sem_memagent_call(
 ):
     async with semaphore:
         return await memagent_async_get_pred_for_sample(
+            api_root_url,
             sample,
             model,
             tokenizer,
@@ -134,6 +136,7 @@ def main(
                         asyncio.create_task(
                             sem_memagent_call(
                                 semaphore,
+                                api_root_url,
                                 sample,
                                 model,
                                 tokenizer,

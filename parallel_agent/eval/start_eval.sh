@@ -1,0 +1,1 @@
+source ~/azureml_job_env.sh
