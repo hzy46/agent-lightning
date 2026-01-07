@@ -224,7 +224,7 @@ def main(
                 for k, v in metrics.items():
                     sample[k] = v
             
-            print(f"task: {task} length: {context_length_str} sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f} avg_task_time: {avg_task_time:.2f}s")
+            print(f"task: {task} length: {context_length_str} sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
             
             with open(result_save_path, "w") as f:
                 for sample in samples:
