@@ -8,7 +8,7 @@ import subprocess
 import time
 import numpy as np
 from methods import normal_get_pred_for_sample, memagent_async_get_pred_for_sample
-from methods import parallel_async_get_pred_for_sample
+from parallel_methods import parallel_async_get_pred_for_sample
 from transformers import AutoTokenizer
 import asyncio
 import fire
