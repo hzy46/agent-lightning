@@ -77,6 +77,7 @@ def main(
         "256K",
     ],
     save_root_dir="results/",
+    limit_n=None,
 ):
     base_dir = os.path.expanduser("~/ruler_from_memagent")
     context_length_str_to_num = {
@@ -116,6 +117,9 @@ def main(
             
             with open(task_path) as f:
                 samples = json.load(f)
+            if limit_n is not None:
+                samples = samples[:limit_n]
+                print(f"limit samples to {limit_n}")
             
             model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
             result_save_path = os.path.join(model_save_dir, "result_{}_{}.json".format(task, context_length_str))
