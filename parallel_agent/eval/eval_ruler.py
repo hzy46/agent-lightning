@@ -185,7 +185,7 @@ def main(
                     semaphore = asyncio.Semaphore(5)
                     aio_tasks = [
                         asyncio.create_task(
-                            sem_memagent_call_memagent(
+                            sem_memagent_call_parallel(
                                 semaphore,
                                 api_root_url,
                                 sample,
