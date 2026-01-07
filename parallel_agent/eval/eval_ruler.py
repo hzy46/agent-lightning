@@ -78,6 +78,7 @@ def main(
     ],
     save_root_dir="results/",
     limit_n=None,
+    max_workers=None,
 ):
     base_dir = os.path.expanduser("~/ruler_from_memagent")
     context_length_str_to_num = {
@@ -94,6 +95,14 @@ def main(
     temperature = 0
     top_p = 1
     api_root_url = "http://localhost:8000/v1"
+    
+    if max_workers is None:
+        if method == "normal":
+            max_workers = 50
+        elif method == "memagent":
+            max_workers = 50
+        elif method == "parallel":
+            max_workers = 5
 
     while True:
         print("try to conntect...")
@@ -137,9 +146,9 @@ def main(
                     with open(result_save_path, "w") as f:
                         pass
             
-            max_workers = 50
+            start_time = time.time()
             if method == "normal":
-                with ThreadPoolExecutor(max_workers=50) as executor:
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     futures = [
                         executor.submit(
                             normal_get_pred_for_sample,
@@ -182,7 +191,7 @@ def main(
             elif method == "parallel":
                 async def _run_parallel():
                     # use a small parallism for parallel agent
-                    semaphore = asyncio.Semaphore(5)
+                    semaphore = asyncio.Semaphore(max_workers)
                     aio_tasks = [
                         asyncio.create_task(
                             sem_memagent_call_parallel(
@@ -207,13 +216,15 @@ def main(
                 asyncio.run(_run_parallel())
             else:
                 raise NotImplementedError
+            end_time = time.time()
+            avg_task_time = (end_time - start_time) / len(samples)
 
             for sample in samples:
                 metrics = score_func(task, sample["outputs"], sample["response"])
                 for k, v in metrics.items():
                     sample[k] = v
             
-            print(f"task: {task} length: {context_length_str}  sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f}")
+            print(f"task: {task} length: {context_length_str} sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f} avg_task_time: {avg_task_time:.2f}s")
             
             with open(result_save_path, "w") as f:
                 for sample in samples:
