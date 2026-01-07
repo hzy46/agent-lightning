@@ -8,12 +8,13 @@ import subprocess
 import time
 import numpy as np
 from methods import normal_get_pred_for_sample, memagent_async_get_pred_for_sample
+from methods import parallel_async_get_pred_for_sample
 from transformers import AutoTokenizer
 import asyncio
 import fire
 from utils import score_func
 
-async def sem_memagent_call(
+async def sem_memagent_call_memagent(
     semaphore,
     api_root_url,
     sample,
@@ -24,6 +25,26 @@ async def sem_memagent_call(
 ):
     async with semaphore:
         return await memagent_async_get_pred_for_sample(
+            api_root_url,
+            sample,
+            model,
+            tokenizer,
+            temperature,
+            top_p,
+        )
+
+
+async def sem_memagent_call_parallel(
+    semaphore,
+    api_root_url,
+    sample,
+    model,
+    tokenizer,
+    temperature,
+    top_p,
+):
+    async with semaphore:
+        return await parallel_async_get_pred_for_sample(
             api_root_url,
             sample,
             model,
@@ -134,7 +155,7 @@ def main(
                     semaphore = asyncio.Semaphore(max_workers)
                     aio_tasks = [
                         asyncio.create_task(
-                            sem_memagent_call(
+                            sem_memagent_call_memagent(
                                 semaphore,
                                 api_root_url,
                                 sample,
@@ -154,6 +175,32 @@ def main(
                         await coro
 
                 asyncio.run(_run_memagent())
+            elif method == "parallel":
+                async def _run_parallel():
+                    # use a small parallism for parallel agent
+                    semaphore = asyncio.Semaphore(5)
+                    aio_tasks = [
+                        asyncio.create_task(
+                            sem_memagent_call_memagent(
+                                semaphore,
+                                api_root_url,
+                                sample,
+                                model,
+                                tokenizer,
+                                temperature,
+                                top_p,
+                            )
+                        )
+                        for sample in samples
+                    ]
+
+                    for coro in tqdm(
+                        asyncio.as_completed(aio_tasks),
+                        total=len(aio_tasks),
+                    ):
+                        await coro
+
+                asyncio.run(_run_parallel())
             else:
                 raise NotImplementedError
 
