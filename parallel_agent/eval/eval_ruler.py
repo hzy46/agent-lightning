@@ -92,6 +92,10 @@ def main(
     }
     tokenizer = AutoTokenizer.from_pretrained(model)
 
+    if os.path.exists(model):
+        # it is a path
+        model = model.split("/")[-1]
+
     temperature = 0
     top_p = 1
     api_root_url = "http://localhost:8000/v1"
