@@ -106,6 +106,9 @@ class BaseModelMerger(ABC):
         self.model_config = AutoConfig.from_pretrained(self.hf_model_config_path)
 
     def get_transformers_auto_model_class(self):
+        if self.model_config.architectures is None:
+            print("model_config.architectures is none. assert AutoModelForCausalLM")
+            return AutoModelForCausalLM
         if "ForTokenClassification" in self.model_config.architectures[0]:
             return AutoModelForTokenClassification
         elif "ForCausalLM" in self.model_config.architectures[0]:
