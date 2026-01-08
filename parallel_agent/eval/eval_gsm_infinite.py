@@ -73,13 +73,15 @@ def main(
     task_ops=[
         2,
         4,
+        6,
+        8,
     ],
     length_strs=[
         # "8K",
         # "16K",
         "32K",
-        # "64K",
-        # "128K",
+        "64K",
+        "128K",
     ],
     save_root_dir="results/",
     limit_n=None,
