@@ -230,12 +230,14 @@ async def run_query_pipeline(api_root_url, model, chunks: list[str], query: str,
 
 async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type):
     async with semaphore:
-        if task_type == "ruler"
+        if task_type == "ruler":
             context = sample["context"].strip()
             query = sample['input'].strip()
         elif task_type == "gsm_infinite":
             context = sample["context"].strip()
             query = sample['query'].strip()
+        else:
+            raise NotImplementedError
 
         input_ids = tokenizer.encode(context, add_special_tokens=False)
         chunks = []
