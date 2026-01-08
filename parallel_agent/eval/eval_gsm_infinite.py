@@ -10,7 +10,8 @@ import numpy as np
 from transformers import AutoTokenizer
 import asyncio
 import fire
-from algorithms.normal import fill_response_for_sample_gsm_infinite as normal_fill_response_for_sample_gsm_infinite
+from algorithms.normal import fill_in_response as normal_fill_in_response
+from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 
 import re
 
@@ -155,16 +156,41 @@ def main(
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     futures = [
                         executor.submit(
-                            normal_fill_response_for_sample_gsm_infinite,
+                            normal_fill_in_response,
                             api_root_url,
                             model,
                             sample,
+                            "gsm_infinite"
                         )
                         for sample in samples
                     ]
                 
                     for future in tqdm(as_completed(futures), total=len(futures)):
                         future.result()
+            elif method == "memagent":
+                async def _run_memagent():
+                    semaphore = asyncio.Semaphore(max_workers)
+                    aio_tasks = [
+                        asyncio.create_task(
+                            memagent_async_fill_in_response_with_sem(
+                                semaphore,
+                                api_root_url,
+                                sample,
+                                model,
+                                tokenizer,
+                                "gsm_infinite"
+                            )
+                        )
+                        for sample in samples
+                    ]
+
+                    for coro in tqdm(
+                        asyncio.as_completed(aio_tasks),
+                        total=len(aio_tasks),
+                    ):
+                        await coro
+
+                asyncio.run(_run_memagent())
             else:
                 raise NotImplementedError
 

@@ -57,29 +57,49 @@ template_final_ruler = """You are presented with a problem and a previous memory
 Your answer:
 """
 
+
+
+template_final_gsm_infinite = """You are presented with a problem and a previous memory. Please answer the problem based on the previous memory.
+
+<problem> 
+{prompt}
+</problem>
+
+<memory>
+{memory}
+</memory>
+"""
+
+
 no_memory = "No previous memory"
 
 
-async def _async_fill_in_response_for_sample(api_root_url, sample, model, tokenizer, task_type):
+async def _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type):
     RECURRENT_CHUNK_SIZE = 5000
     RECURRENT_MAX_NEW = 1024
     temperature = 0
     top_p = 1
     API_KEY = "dummy"
 
-    if task == 
+    if task_type == "ruler":
+        template_final = template_final_ruler
+        context = sample["context"].strip()
+        prompt = sample['input'].strip()
+    elif task_type == "gsm_infinite":
+        template_final = template_final_gsm_infinite
+        context = sample["context"].strip()
+        prompt = sample['query'].strip()
+    else:
+        raise NotImplementedError
 
-
-    context = sample["context"].strip()
-    prompt = sample['input'].strip()
     session = await get_async_client()
     history_memory_list = []
     async with session:
         input_ids = tokenizer.encode(context)
-        memory = mem_agent_no_memory
+        memory = no_memory
         for i in range(0, len(input_ids), RECURRENT_CHUNK_SIZE):
-            chunk = input_ids[i:i+RECURRENT_CHUNK_SIZE]
-            msg = memagent_template.format(prompt=prompt, chunk=tokenizer.decode(chunk), memory=memory)
+            chunk = input_ids[i:i + RECURRENT_CHUNK_SIZE]
+            msg = template.format(prompt=prompt, chunk=tokenizer.decode(chunk), memory=memory)
             try:
                 async with session.post(
                     url= api_root_url + "/chat/completions",
@@ -104,7 +124,7 @@ async def _async_fill_in_response_for_sample(api_root_url, sample, model, tokeni
                 import traceback
                 traceback.print_exc()
                 return '', history_memory_list
-        msg = memagent_template_final.format(prompt=prompt, memory=memory)
+        msg = template_final.format(prompt=prompt, memory=memory)
         try:
             async with session.post(
                 url= api_root_url + "/chat/completions",
@@ -129,10 +149,9 @@ async def _async_fill_in_response_for_sample(api_root_url, sample, model, tokeni
             traceback.print_exc()
         return '', history_memory_list
 
-async def async_fill_in_response_for_sample(api_root_url, sample, model, tokenizer, task_type):
-    response, history_memory_list = await _memagent_async_get_pred_for_sample(api_root_url, sample, model, tokenizer, task_type)
-    sample["history_memory_list"] = history_memory_list
-    sample["response"] = response
-
-
+async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type):
+    async with semaphore:
+        response, history_memory_list = await _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type)
+        sample["history_memory_list"] = history_memory_list
+        sample["response"] = response
 
