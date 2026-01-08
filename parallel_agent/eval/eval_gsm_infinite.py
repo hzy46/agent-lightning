@@ -137,7 +137,7 @@ def main(
                 print(f"limit samples to {limit_n}")
 
             model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
-            result_save_path = os.path.join(model_save_dir, "result_{}_{}.json".format(task_op, length_str))
+            result_save_path = os.path.join(model_save_dir, "gsm_result_{}_{}.json".format(task_op, length_str))
             if os.path.exists(model_save_dir) is False:
                 os.makedirs(model_save_dir)
             if os.path.exists(result_save_path):
