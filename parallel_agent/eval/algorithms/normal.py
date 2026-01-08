@@ -53,7 +53,7 @@ def fill_response_for_sample_gsm_infinite(api_root_url, model, sample):
     top_p = 1
     context = sample["context"]
     query = sample["query"]
-    prompt = prompt_template_gsm_infinite.replace('$DOC$', context.strip()).replace('$Q$', input.strip())
+    prompt = prompt_template_gsm_infinite.replace('$DOC$', context.strip()).replace('$Q$', query.strip())
     r = requests.post(
         url=api_root_url + "/chat/completions",
         headers={"Authorization": f"Bearer dummy"},
