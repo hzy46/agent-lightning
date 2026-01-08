@@ -123,7 +123,7 @@ def main(
 
     for task_op in task_ops:
         for length_str in length_strs:
-            print(f"length: {length_str}")
+            print(f"task_op: {task_op} length: {length_str}")
             task_path = os.path.join(base_dir, f"hard_{length_str}.json")
             
             with open(task_path) as f:
