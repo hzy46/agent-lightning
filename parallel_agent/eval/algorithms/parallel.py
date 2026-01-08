@@ -1,0 +1,251 @@
+import asyncio
+import re
+import random
+import aiohttp
+
+
+async def get_async_client():
+    return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
+
+CHUNK_SIZE = 5000
+MAX_ROUNDS = 3
+
+
+chunk_prompt_template = """
+You are a chunk-level agent collaborating with a central long-context processing agent to complete a task.
+
+Due to length limitations, we cannot process the entire context in full. However, you can process your assigned chunk and report relevant findings back to the central agent.
+
+Your assigned chunk:
+- Chunk index: {chunk_index}
+- Total chunks: {chunk_total}
+- Content:
+{chunk_text}
+
+The central agent's query to you is:
+{query}
+
+Instructions:
+- If the query explicitly targets a specific chunk index and you are NOT that chunk, output an empty report exactly as: <report></report>
+- Otherwise, read your chunk and provide the most useful information you can for answering the query.
+ - Do NOT provide the full chunk content. Keep your report concise and only include relevant information.
+
+Output format:
+- Put BOTH your thinking and your findings together inside a single block: <report>...</report>
+- Do not output anything outside <report></report>
+"""
+
+
+central_prompt_template_ruler = """
+You are a central long-context processing agent working on a task.
+
+Because of context length limitations, you cannot directly process the entire context yourself; instead, the context is divided into multiple chunks, and you must communicate with individual chunk agents to request and gather the information you need. 
+
+When doing so, do not ask chunk agents to provide the full chunk content, as this is time-consuming; instead, request only the specific parts that are relevant.
+
+You are given the key you need to find, as well as reports from all previously processed chunks. Based on this information, you must decide whether to answer or to update the query.
+
+First, think through the problem and put your reasoning inside <thinking></thinking>.  
+If you can answer, put the final value inside <answer></answer>, and you must format your response as follows "Therefore, the answer is (insert answer here)".  
+If you need more information, put your reasoning, the required information, and the corresponding chunk identifiers inside <query></query>.
+
+Current Query:
+{query}
+
+Reports from Chunks:
+{round_report}
+
+Output exactly two blocks, in this order:
+<thinking>...</thinking>
+and exactly one of the following:
+<answer>Therefore, the answer is (insert answer here).</answer>
+or
+<query>...</query>
+""".strip()
+
+central_prompt_inter_template_ruler = """
+Updated Query:
+{query}
+
+Reports from Chunks:
+{round_report}
+
+Output exactly two blocks, in this order:
+<thinking>...</thinking>
+and exactly one of the following:
+<answer>Therefore, the answer is (insert answer here)</answer>
+or
+<query>...</query>
+""".strip()
+
+
+
+central_prompt_template_gsm_infinite = """
+You are a central long-context processing agent working on a task.
+
+Because of context length limitations, you cannot directly process the entire context yourself; instead, the context is divided into multiple chunks, and you must communicate with individual chunk agents to request and gather the information you need. 
+
+When doing so, do not ask chunk agents to provide the full chunk content, as this is time-consuming; instead, request only the specific parts that are relevant.
+
+You are given the key you need to find, as well as reports from all previously processed chunks. Based on this information, you must decide whether to answer or to update the query.
+
+First, think through the problem and put your reasoning inside <thinking></thinking>.  
+If you can answer, put the final value inside <answer></answer>, and you must format your response as follows "Answer: <the answer here>."
+If you need more information, put your reasoning, the required information, and the corresponding chunk identifiers inside <query></query>.
+
+Current Query:
+{query}
+
+Reports from Chunks:
+{round_report}
+
+Output exactly two blocks, in this order:
+<thinking>...</thinking>
+and exactly one of the following:
+<answer>Answer: <the answer here>.</answer>
+or
+<query>...</query>
+""".strip()
+
+central_prompt_inter_template_gsm_infinite = """
+Updated Query:
+{query}
+
+Reports from Chunks:
+{round_report}
+
+Output exactly two blocks, in this order:
+<thinking>...</thinking>
+and exactly one of the following:
+<answer>Answer: <the answer here>.</answer>
+or
+<query>...</query>
+""".strip()
+
+
+def extract_tag(text: str, tag: str) -> str | None:
+    match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.S)
+    return match.group(1).strip() if match else None
+
+
+async def call_llm(api_root_url, model, messages) -> str:
+    MAX_NEW = 1024
+    temperature = 0
+    top_p = 1
+    session = await get_async_client()
+    async with session:
+        async with session.post(
+            url= api_root_url + "/chat/completions",
+            headers={"Authorization": f"Bearer dummy"},
+            json=dict(model=model,
+                messages=messages,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=MAX_NEW,
+            )
+        ) as resp:
+            status = resp.status
+            if status!= 200:
+                print(f"{status=}, {model=}")
+                return ""
+            data = await resp.json()
+            return data['choices'][0]['message']['content']
+
+async def run_chunk_agent(api_root_url, model, chunk_text: str, query: str, idx: int, total: int) -> str:
+    prompt = chunk_prompt_template.format(
+        chunk_index=idx,
+        chunk_total=total,
+        chunk_text=chunk_text,
+        query=query
+    )
+    messages = [{"role": "user", "content": prompt}]
+    output = await call_llm(api_root_url, model, messages)
+
+    # if random.random() <= 0.001:
+        # print("\n------chunk agent log starts-----\n", prompt, "\n*\n", output, "\n-------chunk agent log ends------\n")
+
+    report = extract_tag(output, "report")
+    if report:
+        return f"[Chunk {idx} Report]\n{report}"
+    return ""
+
+async def run_central_agent(api_root_url, model, query, round_report, history_messages, task_type) -> dict:
+
+    if task_type == "ruler":
+        central_prompt_template = central_prompt_template_ruler
+        central_prompt_inter_template = central_prompt_inter_template_ruler
+    elif task_type == "gsm_infinite":
+        central_prompt_template = central_prompt_template_gsm_infinite
+        central_prompt_inter_template = central_prompt_inter_template_gsm_infinite
+    if len(history_messages) == 0:
+        history_messages.append({"role": "user", "content": central_prompt_template.format(
+            query=query,
+            round_report=round_report
+        )})
+    else:
+        history_messages.append({"role": "user", "content": central_prompt_inter_template.format(
+            query=query,
+            round_report=round_report
+        )})
+    output = await call_llm(api_root_url, model, history_messages)
+
+    # if random.random() <= 0.01:
+        # print("\n-------central agent log starts-------\n", "\n*\n".join([entry["content"] for entry in history_messages]), "\n*\n", output, "\n-------central agent log ends-----\n")
+
+    history_messages.append({"role": "assistant", "content": output})
+
+    answer = extract_tag(output, "answer")
+    if answer is not None:
+        return {"type": "answer", "content": answer}
+
+    new_query = extract_tag(output, "query")
+    if new_query is not None:
+        return {"type": "query", "content": new_query}
+
+    return {"type": "answer", "content": ""}
+
+
+async def run_query_pipeline(api_root_url, model, chunks: list[str], query: str, task_type) -> str:
+    current_query = query
+    history_messages = []
+    for round_idx in range(1, MAX_ROUNDS + 1):
+        tasks = [
+            run_chunk_agent(api_root_url, model, chunk, current_query, i + 1, len(chunks))
+            for i, chunk in enumerate(chunks)
+        ]
+        chunk_reports = await asyncio.gather(*tasks)
+        # 汇总本轮 report
+        round_report = "\n\n".join([r for r in chunk_reports if r])
+
+        # 跑 query agent
+        result = await run_central_agent(api_root_url, model, current_query, round_report, history_messages, task_type)
+
+        if result["type"] == "answer":
+            return result["content"], history_messages
+
+        # 更新 query
+        current_query = result["content"]
+
+    return "", history_messages
+
+async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type):
+    async with semaphore:
+        if task_type == "ruler"
+            context = sample["context"].strip()
+            query = sample['input'].strip()
+        elif task_type == "gsm_infinite":
+            context = sample["context"].strip()
+            query = sample['query'].strip()
+
+        input_ids = tokenizer.encode(context, add_special_tokens=False)
+        chunks = []
+        for i in range(0, len(input_ids), CHUNK_SIZE):
+            chunk_ids = input_ids[i:i+CHUNK_SIZE]
+            chunk = tokenizer.decode(chunk_ids)
+            chunks.append(chunk)
+
+        response, history_messages = await run_query_pipeline(api_root_url, model, chunks, query, task_type)
+        sample["history_messages"] = history_messages
+        sample["response"] = response
+
+

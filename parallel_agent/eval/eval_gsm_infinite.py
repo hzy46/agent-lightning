@@ -12,6 +12,7 @@ import asyncio
 import fire
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
+from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
 
 import re
 
@@ -191,6 +192,30 @@ def main(
                         await coro
 
                 asyncio.run(_run_memagent())
+            elif method == "parallel":
+                async def _run_parallel():
+                    semaphore = asyncio.Semaphore(max_workers)
+                    aio_tasks = [
+                        asyncio.create_task(
+                            parallel_async_fill_in_response_with_sem(
+                                semaphore,
+                                api_root_url,
+                                sample,
+                                model,
+                                tokenizer,
+                                "gsm_infinite"
+                            )
+                        )
+                        for sample in samples
+                    ]
+
+                    for coro in tqdm(
+                        asyncio.as_completed(aio_tasks),
+                        total=len(aio_tasks),
+                    ):
+                        await coro
+
+                asyncio.run(_run_parallel())
             else:
                 raise NotImplementedError
 
