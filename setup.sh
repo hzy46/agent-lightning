@@ -55,3 +55,6 @@ conda activate agl
 
 cd ~/agent-lightning/
 pip install -e .
+
+ pip install ipykernel
+ python -m ipykernel install --user --name agl --display-name agl
