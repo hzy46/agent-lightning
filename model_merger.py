@@ -98,7 +98,6 @@ class BaseModelMerger(ABC):
     def __init__(self, config: ModelMergerConfig):
         self.config = config
         self.hf_model_config_path = config.hf_model_config_path
-        print(self.hf_model_config_path)
 
         if config.hf_model_path:
             print("Warning: --hf_model_path is deprecated and will be removed in a future version. Currently verl will save huggingface model configuration files into checkpoint directories. Therefore, there is no need to provide --hf_model_path. ")
@@ -683,7 +682,7 @@ def main():
         "is_value_model": args.is_value_model,
         "local_dir": args.local_dir,
         "hf_model_path": args.hf_model_path,
-        "hf_model_config_path": args.local_dir,
+        "hf_model_config_path": os.path.join(args.local_dir, "huggingface"),
     }
 
     if args.operation == "merge":
