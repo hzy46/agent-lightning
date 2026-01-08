@@ -37,7 +37,7 @@ def fill_in_response(api_root_url, model, sample, task_type):
         temperature = 0
         top_p = 1
         context = sample["context"]
-        query = sample["input"]
+        query = sample["query"]
         prompt_template = prompt_template_gsm_infinite
     else:
         raise NotImplementedError
