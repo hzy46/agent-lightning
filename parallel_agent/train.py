@@ -117,6 +117,8 @@ if __name__ == "__main__":
             test_sample_list.extend(data_list)
     rng.shuffle(test_sample_list)
 
+    test_sample_list = test_sample_list[:100]
+
 
     algorithm = agl.VERL(verl_config)
     # Number of agents launched in parallel to query the LLM.
