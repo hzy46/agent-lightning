@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from typing import Any, Dict, List, Literal, Optional, Tuple, cast
 
 import numpy as np
+import pandas as pd
 import requests
 import torch
 from flask import Flask, Response, abort, request
@@ -729,8 +730,66 @@ class AgentModeDaemon:
             list
         )  # FIXME: Evaluate whether grouping stats by source is actually needed.
 
+        # collect gsm_infinite samples and report the result
+        gsm_ret_list = []
+        for rollout_id, rollout in self._completed_rollouts_v0.items():
+            final_reward = rollout.final_reward
+            if final_reward is None:
+                continue
+            if not rollout.triplets:
+                continue
+            response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
+            original_sample = self._task_id_to_original_sample[rollout_id]
+            if original_sample.get("task_type", "") == "gsm_infinite":
+                gsm_ret_list.append({
+                    "op": original_sample["op"],
+                    "length": original_sample["length"],
+                    "turn_count": len(rollout.triplets),
+                    "reward": final_reward,
+                    "sum_response_length": np.sum(response_length_list),
+                })
 
-        breakpoint()
+        if len(gsm_ret_list) > 0:
+            ret_df = pd.DataFrame(gsm_ret_list)
+            ops = ret_df.op.drop_duplicates().tolist()
+            lengths = ret_df.length.drop_duplicates().tolist()
+            # op and length statistics
+            for op in ops:
+                for length in lengths:
+                    sub_df = ret_df[(ret_df.op == op) & (ret_df.length == length)]
+                    if len(sub_df) > 0:
+                        metric_dict.update({
+                            f"val/gsm_infinite/op={op}_length={length}/reward": float(sub_df.reward.mean()),
+                            f"val/gsm_infinite/op={op}_length={length}/turn_count": float(sub_df.turn_count.mean()),
+                            f"val/gsm_infinite/op={op}_length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                        })
+            # op
+            for op in ops:
+                sub_df = ret_df[(ret_df.op == op)]
+                if len(sub_df) > 0:
+                    metric_dict.update({
+                        f"val/gsm_infinite/op={op}/reward": float(sub_df.reward.mean()),
+                        f"val/gsm_infinite/op={op}/turn_count": float(sub_df.turn_count.mean()),
+                        f"val/gsm_infinite/op={op}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                    })
+
+            # length
+            for length in lengths:
+                sub_df = ret_df[(ret_df.length == length)]
+                if len(sub_df) > 0:
+                    metric_dict.update({
+                        f"val/gsm_infinite/length={length}/reward": float(sub_df.reward.mean()),
+                        f"val/gsm_infinite/length={length}/turn_count": float(sub_df.turn_count.mean()),
+                        f"val/gsm_infinite/length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                    })
+
+            # overall
+            metric_dict.update({
+                f"val/gsm_infinite/overall/reward": float(ret_df.reward.mean()),
+                f"val/gsm_infinite/overall/turn_count": float(ret_df.turn_count.mean()),
+                f"val/gsm_infinite/overall/sum_response_length": float(ret_df.sum_response_length.mean()),
+            })
+
 
         for rollout_id, rollout in self._completed_rollouts_v0.items():
             final_reward_raw: Optional[float] = rollout.final_reward
@@ -805,7 +864,6 @@ class AgentModeDaemon:
                 "val/turn_count": np.mean([stat["turn_count"] for stat in stats_w_trace]),
             }
         )
-        breakpoint()
         return metric_dict
 
     def get_train_data_batch(

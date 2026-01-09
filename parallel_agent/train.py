@@ -102,7 +102,11 @@ if __name__ == "__main__":
     rng = random.Random(42)
 
     train_sample_list = []
-    for file_name in ["hard_8K.json", "hard_16K.json", "hard_32K.json"]:
+    for file_name in [
+        "hard_8K.json", 
+        # "hard_16K.json", 
+        # "hard_32K.json"
+    ]:
         file_path = os.path.join(train_dataset_dir, file_name)
         with open(file_path) as f:
             data_list = json.load(f)
@@ -110,7 +114,11 @@ if __name__ == "__main__":
     rng.shuffle(train_sample_list)
 
     test_sample_list = []
-    for file_name in ["hard_8K.json", "hard_16K.json", "hard_32K.json"]:
+    for file_name in [
+        "hard_8K.json", 
+        # "hard_16K.json", 
+        # "hard_32K.json"
+    ]:
         file_path = os.path.join(test_dataset_dir, file_name)
         with open(file_path) as f:
             data_list = json.load(f)
