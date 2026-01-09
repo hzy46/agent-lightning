@@ -70,6 +70,7 @@ for is_tail in [False, True]:
             hint = type_to_hint[(row["template"], row["mode"])]
             query = hint + "\n\nQuestion: {}".format(row["question"])
             data_list.append({
+                "task_type": "gsm_infinite",
                 "context": context,
                 "query": query,
                 "solution": row["solution"],
