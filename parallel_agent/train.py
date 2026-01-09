@@ -107,7 +107,7 @@ if __name__ == "__main__":
     train_sample_list = []
     for file_name in [
         "hard_8K.json", 
-        # "hard_16K.json", 
+        "hard_16K.json", 
         # "hard_32K.json"
     ]:
         file_path = os.path.join(train_dataset_dir, file_name)
@@ -119,24 +119,22 @@ if __name__ == "__main__":
     # prepare_test
     test_sample_list = []
     # gsm_infinite
-    # gsm_test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
-    # for file_name in [
-    #     "hard_8K.json", 
-    #     "hard_16K.json", 
-    #     # "hard_32K.json"
-    # ]:
-    #     file_path = os.path.join(gsm_test_dataset_dir, file_name)
-    #     with open(file_path) as f:
-    #         data_list = json.load(f)
-    #         test_sample_list.extend(data_list)
+    gsm_test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
+    for file_name in [
+        "hard_8K.json", 
+        "hard_16K.json", 
+        # "hard_32K.json"
+    ]:
+        file_path = os.path.join(gsm_test_dataset_dir, file_name)
+        with open(file_path) as f:
+            data_list = json.load(f)
+            test_sample_list.extend(data_list)
     # ruler
     ruler_test_file_path = os.path.expanduser("~/ruler_mini.json")
     with open(ruler_test_file_path) as f:
         data_list = json.load(f)
     test_sample_list.extend(data_list)
-
-
-    # rng.shuffle(test_sample_list)
+    rng.shuffle(test_sample_list)
 
     # test_sample_list = test_sample_list[:100]
 

@@ -29,7 +29,7 @@ length_to_length_num = {
     "128K": 131072,
 }
 
-n_sample_per_pair = 20
+n_sample_per_pair = 30
 
 output_list = []
 for task in tasks:
