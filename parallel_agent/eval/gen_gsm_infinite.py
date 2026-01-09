@@ -20,7 +20,11 @@ for key, hints in type_to_hint_list.items():
 
 # split to different parts
 for is_tail in [False, True]:
-    for length_str in ["8K", "16K", "32K", "64K", "128K"]:
+    if is_tail is True:
+        length_strs = ["8K", "16K", "32K"]
+    else:
+        length_strs = ["8K", "16K", "32K", "64K", "128K"]
+    for length_str in length_strs:
         limit_n_per_op = 200 #  乘 0.05，0.4 后要是整数不然会被约去少量样本
         dataset_name = f"InfiniAILab/gsm_infinite_hard_{length_str}"
         op_list = [2, 4, 6, 8, 10]
