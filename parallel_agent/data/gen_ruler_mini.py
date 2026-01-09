@@ -6,9 +6,9 @@ root_dir = os.path.expanduser("~/ruler_from_memagent")
 save_path = os.path.expanduser("~/ruler_mini.json")
 
 tasks = [
-    "niah_single_1",
-    "niah_single_2",
-    "niah_single_3",
+    # "niah_single_1",
+    # "niah_single_2",
+    # "niah_single_3",
     "niah_multikey_1",
     "niah_multikey_2",
     "niah_multikey_3",
@@ -20,16 +20,16 @@ tasks = [
 ]
 
 lengths = [
-    "64K",
+    # "64K",
     "128K",
 ]
 
 length_to_length_num = {
-    "64K": 65536,
+    # "64K": 65536,
     "128K": 131072,
 }
 
-n_sample_per_pair = 2
+n_sample_per_pair = 20
 
 output_list = []
 for task in tasks:
