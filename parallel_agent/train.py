@@ -8,6 +8,7 @@ import copy
 from transformers import AutoTokenizer
 from eval.algorithms.parallel import async_fill_in_response as parallel_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
+import traceback
 
 verl_config = {
     "algorithm": {
