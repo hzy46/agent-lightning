@@ -227,26 +227,29 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
 
     return "", history_messages
 
+
+async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0):
+    if task_type == "ruler":
+        context = sample["context"].strip()
+        query = sample['input'].strip()
+    elif task_type == "gsm_infinite":
+        context = sample["context"].strip()
+        query = sample['query'].strip()
+    else:
+        raise NotImplementedError
+
+    input_ids = tokenizer.encode(context, add_special_tokens=False)
+    chunks = []
+    for i in range(0, len(input_ids), CHUNK_SIZE):
+        chunk_ids = input_ids[i:i+CHUNK_SIZE]
+        chunk = tokenizer.decode(chunk_ids)
+        chunks.append(chunk)
+
+    response, history_messages = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type)
+    sample["history_messages"] = history_messages
+    sample["response"] = response
+
 async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0):
     async with semaphore:
-        if task_type == "ruler":
-            context = sample["context"].strip()
-            query = sample['input'].strip()
-        elif task_type == "gsm_infinite":
-            context = sample["context"].strip()
-            query = sample['query'].strip()
-        else:
-            raise NotImplementedError
-
-        input_ids = tokenizer.encode(context, add_special_tokens=False)
-        chunks = []
-        for i in range(0, len(input_ids), CHUNK_SIZE):
-            chunk_ids = input_ids[i:i+CHUNK_SIZE]
-            chunk = tokenizer.decode(chunk_ids)
-            chunks.append(chunk)
-
-        response, history_messages = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type)
-        sample["history_messages"] = history_messages
-        sample["response"] = response
-
+        await async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature)
 

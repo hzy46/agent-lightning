@@ -4,9 +4,12 @@ import re
 from datasets import load_dataset
 from openai import AsyncOpenAI
 import agentlightning as agl
-from agent_pipeline import run_query_pipeline
-import jsonlines
 import os
+import json
+from eval.algorithms.parallel import async_fill_in_response as parallel_async_fill_in_response
+import copy
+from transformers import AutoTokenizer
+from eval.utils import score_func_gsm_infinite
 
 verl_config = {
     "algorithm": {
@@ -72,55 +75,60 @@ verl_config = {
     },
 }
 
+tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["model"]["path"])
+
 
 @agl.rollout
-async def kv_agent(task: KVProblem, llm: agl.LLM) -> None:
+async def solver_agent(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
-        max_rounds = 3
-        answer = await run_query_pipeline(llm, task["chunks"], task["query"], max_rounds)
-        answer = answer.strip()
+        model = llm.model
+        api_root_url = llm.endpoint
+        temperature = llm.sampling_parameters.get("temperature", 1.0)
+        task = copy.deepcopy(task)
+        await parallel_async_fill_in_response(api_root_url, task, model, tokenizer, task["task_type"], temperature)
     except Exception as e:
         print("Failure:", str(e))
-        answer = ""
+        task["response"] = ""
 
-    if task["ground_truth"] == answer:
-        reward = 1
-    else:
-        reward = 0
+    assert task["task_type"] == "gsm_infinite"
 
+    reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
     # This reward will be tracked automatically
     agl.emit_reward(reward)
 
 
 if __name__ == "__main__":
-    train_dataset_dir = os.path.expanduser("~/parallel_agent_with_hard")
-    train_dataset_dir = os.path.expanduser("~/parallel_agent_with_hard")
-    train_path = os.path.join(dataset_dir, "train.jsonl")
-    test_path = os.path.join(dataset_dir, "test.jsonl")
+    train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_tail")
+    test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed")
+    rng = random.Random(42)
 
     train_sample_list = []
-    with jsonlines.open(train_path) as reader:
-        for j in reader:
-            train_sample_list.append(j)
+    for file_name in ["hard_8K.json", "hard_16K.json", "hard_32K.json"]:
+        file_path = os.path.join(train_dataset_dir, file_name)
+        with open(file_path) as f:
+            data_list = json.load(f)
+            train_sample_list.extend(data_list)
+    rng.shuffle(train_sample_list)
 
     test_sample_list = []
-    with jsonlines.open(test_path) as reader:
-        for j in reader:
-            test_sample_list.append(j)
+    for file_name in ["hard_8K.json", "hard_16K.json", "hard_32K.json"]:
+        file_path = os.path.join(test_dataset_dir, file_name)
+        with open(file_path) as f:
+            data_list = json.load(f)
+            test_sample_list.extend(data_list)
+    rng.shuffle(test_sample_list)
 
-    train_dataset = cast(agl.Dataset[KVProblem], train_sample_list)
-    val_dataset = cast(agl.Dataset[KVProblem], test_sample_list[:100])
 
     algorithm = agl.VERL(verl_config)
     # Number of agents launched in parallel to query the LLM.
     # This parameter strongly affects throughput and efficiency:
     # higher parallelism improves utilization but increases GPU overhead.
-    n_runners = 32
+    n_runners = 16
     # This tracer is a dummy one, as currently tracing is done in the llm proxy part
     tracer = agl.OtelTracer()
     adapter = agl.LlmProxyTraceToTriplet()
     # Set store=None to use managed store
     trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
 
-    trainer.fit(kv_agent, train_dataset, val_dataset=val_dataset)
+    trainer.fit(solver_agent, train_dataset, val_dataset=val_dataset)
