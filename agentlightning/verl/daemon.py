@@ -724,6 +724,7 @@ class AgentModeDaemon:
         """Calculates and returns metrics for a validation run."""
         assert not self.is_train, "This method should only be called during validation."
         assert len(self._completed_rollouts_v0) == self._total_tasks_queued
+        metric_dict: Dict[str, Any] = {}
 
         sample_stat_list: List[Dict[str, Any]] = []
         sample_stat_list_by_source: Dict[str, List[Dict[str, Any]]] = defaultdict(
@@ -822,7 +823,6 @@ class AgentModeDaemon:
                     "has_reward": final_reward_raw is not None,
                 }
             )
-        metric_dict: Dict[str, Any] = {}
 
         stats_w_trace = [stat for stat in sample_stat_list if "sum_response_length" in stat]
         stats_w_trace_by_source = {
