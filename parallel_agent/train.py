@@ -65,7 +65,7 @@ verl_config = {
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "ParallelAgent",
-        "experiment_name": "train_new_qwen2.5-7b-instruct",
+        "experiment_name": "train_8k_16k_gsm_infinite_qwen2.5-7b-instruct_parallel_agent",
         "nnodes": 1,
         "save_freq": 500,
         "test_freq": 50,
