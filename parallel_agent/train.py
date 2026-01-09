@@ -116,7 +116,7 @@ if __name__ == "__main__":
     test_sample_list = []
     for file_name in [
         "hard_8K.json", 
-        # "hard_16K.json", 
+        "hard_16K.json", 
         # "hard_32K.json"
     ]:
         file_path = os.path.join(test_dataset_dir, file_name)
