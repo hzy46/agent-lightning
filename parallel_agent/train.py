@@ -92,6 +92,8 @@ async def solver_agent(task, llm) -> None:
     if task["task_type"] == "gsm_infinite":
         reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
     elif task["task_type"] == "ruler":
+        if "sub_task_type" not in task:
+            breakpoint()
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     else:
         raise NotImplementedError
