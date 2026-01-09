@@ -9,6 +9,7 @@ from transformers import AutoTokenizer
 from eval.algorithms.parallel import async_fill_in_response as parallel_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 import traceback
+import fire
 
 verl_config = {
     "algorithm": {
@@ -66,7 +67,7 @@ verl_config = {
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "ParallelAgent",
-        "experiment_name": "train_8k_16k_gsm_infinite_qwen2.5-7b-instruct_parallel_agent",
+        "experiment_name": "placeholder",
         "nnodes": 1,
         "save_freq": 500,
         "test_freq": 50,
@@ -95,24 +96,49 @@ async def solver_agent(task, llm) -> None:
         reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
     elif task["task_type"] == "ruler":
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
+    elif task["task_type"] == "memagent_train":
+        reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
     else:
         raise NotImplementedError
 
     # This reward will be tracked automatically
     agl.emit_reward(reward)
 
+def main(
+    train_doc_nums=[50, 100, 200],
+    train_gsm_lengths=["8K", "16K", "32K"],
+):
 
-if __name__ == "__main__":
-    train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
+    # set name according to paras
+    experiment_name = "train_qwen2.5-7b_parallel_"
+    if len(train_doc_nums) > 0:
+        experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
+    if len(train_gsm_lengths) > 0:
+        experiment_name += "docs_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
+    experiment_name = experiment_name.strip("_")
+    verl_config["trainer"]["experiment_name"] = experiment_name
+
     rng = random.Random(42)
-
     train_sample_list = []
-    for file_name in [
-        "hard_8K.json", 
-        "hard_16K.json", 
-        "hard_32K.json"
-    ]:
-        file_path = os.path.join(train_dataset_dir, file_name)
+    # mem agent train data (may need regenerate)
+    memagent_train_dataset_dir = os.path.expanduser("~/ruler_from_memagent")
+    
+    for doc_num in train_doc_nums:
+        file_path = os.path.join(memagent_train_dataset_dir, f"eval_{doc_num}.json")
+        with open(file_path) as f:
+            data_list = json.load(f)
+        for data in data_list:
+            data["task_type"] = "memagent_train"
+            data["doc_num"] = doc_num
+        for data in data_list:
+            train_sample_list.append({
+                "data": data
+            })
+
+
+    gsm_train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
+    for gsm_length in train_gsm_lengths:
+        file_path = os.path.join(gsm_train_dataset_dir, f"hard_{gsm_length}.json")
         with open(file_path) as f:
             data_list = json.load(f)
         for data in data_list:
@@ -149,7 +175,7 @@ if __name__ == "__main__":
 
     rng.shuffle(test_sample_list)
 
-    test_sample_list = test_sample_list[:100]
+    test_sample_list = test_sample_list
 
 
     algorithm = agl.VERL(verl_config)
@@ -164,3 +190,9 @@ if __name__ == "__main__":
     trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
 
     trainer.fit(solver_agent, train_sample_list, val_dataset=test_sample_list)
+
+
+
+
+if __name__ == "__main__":
+    fire.Fire(main)

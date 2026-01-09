@@ -170,7 +170,7 @@ async def run_chunk_agent(api_root_url, model, temperature, chunk_text: str, que
 
 async def run_central_agent(api_root_url, model, temperature, query, round_report, history_messages, task_type) -> dict:
 
-    if task_type == "ruler":
+    if task_type == "ruler" or task_type == "memagent_train":
         central_prompt_template = central_prompt_template_ruler
         central_prompt_inter_template = central_prompt_inter_template_ruler
     elif task_type == "gsm_infinite":
@@ -235,6 +235,9 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
     elif task_type == "gsm_infinite":
         context = sample["context"].strip()
         query = sample['query'].strip()
+    elif task_type == "memagent_train":
+        context = sample["context"].strip()
+        query = sample['input'].strip()
     else:
         raise NotImplementedError
 
