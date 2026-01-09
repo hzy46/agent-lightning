@@ -745,7 +745,7 @@ class AgentModeDaemon:
                 gsm_ret_list.append({
                     "op": original_sample["op"],
                     "length": original_sample["length"],
-                    "turn_count": len(rollout.triplets),
+                    "request_count": len(rollout.triplets),
                     "reward": final_reward,
                     "sum_response_length": np.sum(response_length_list),
                 })
@@ -761,7 +761,7 @@ class AgentModeDaemon:
                     if len(sub_df) > 0:
                         metric_dict.update({
                             f"val/gsm_infinite/op={op}_length={length}/reward": float(sub_df.reward.mean()),
-                            f"val/gsm_infinite/op={op}_length={length}/turn_count": float(sub_df.turn_count.mean()),
+                            f"val/gsm_infinite/op={op}_length={length}/request_count": float(sub_df.request_count.mean()),
                             f"val/gsm_infinite/op={op}_length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
                         })
             # op
@@ -770,7 +770,7 @@ class AgentModeDaemon:
                 if len(sub_df) > 0:
                     metric_dict.update({
                         f"val/gsm_infinite/op={op}/reward": float(sub_df.reward.mean()),
-                        f"val/gsm_infinite/op={op}/turn_count": float(sub_df.turn_count.mean()),
+                        f"val/gsm_infinite/op={op}/request_count": float(sub_df.request_count.mean()),
                         f"val/gsm_infinite/op={op}/sum_response_length": float(sub_df.sum_response_length.mean()),
                     })
 
@@ -780,14 +780,14 @@ class AgentModeDaemon:
                 if len(sub_df) > 0:
                     metric_dict.update({
                         f"val/gsm_infinite/length={length}/reward": float(sub_df.reward.mean()),
-                        f"val/gsm_infinite/length={length}/turn_count": float(sub_df.turn_count.mean()),
+                        f"val/gsm_infinite/length={length}/request_count": float(sub_df.request_count.mean()),
                         f"val/gsm_infinite/length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
                     })
 
             # overall
             metric_dict.update({
                 f"val/gsm_infinite/overall/reward": float(ret_df.reward.mean()),
-                f"val/gsm_infinite/overall/turn_count": float(ret_df.turn_count.mean()),
+                f"val/gsm_infinite/overall/request_count": float(ret_df.request_count.mean()),
                 f"val/gsm_infinite/overall/sum_response_length": float(ret_df.sum_response_length.mean()),
             })
 
