@@ -86,14 +86,12 @@ async def solver_agent(task, llm) -> None:
         task = copy.deepcopy(task)
         await parallel_async_fill_in_response(api_root_url, task, model, tokenizer, task["task_type"], temperature)
     except Exception as e:
-        print("Failure:", str(e))
+        print("Failure:", traceback.format_exc())
         task["response"] = ""
 
     if task["task_type"] == "gsm_infinite":
         reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
     elif task["task_type"] == "ruler":
-        if "sub_task_type" not in task:
-            breakpoint()
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     else:
         raise NotImplementedError
