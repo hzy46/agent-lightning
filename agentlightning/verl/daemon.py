@@ -739,9 +739,9 @@ class AgentModeDaemon:
                 continue
             if not rollout.triplets:
                 continue
-            response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
             original_sample = self._task_id_to_original_sample[rollout_id]
             if original_sample.get("task_type", "") == "gsm_infinite":
+                response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
                 gsm_ret_list.append({
                     "op": original_sample["op"],
                     "length": original_sample["length"],
@@ -789,6 +789,66 @@ class AgentModeDaemon:
                 f"val/gsm_infinite/overall/reward": float(ret_df.reward.mean()),
                 f"val/gsm_infinite/overall/request_count": float(ret_df.request_count.mean()),
                 f"val/gsm_infinite/overall/sum_response_length": float(ret_df.sum_response_length.mean()),
+            })
+
+        # collect ruler samples and report the result
+        ruler_ret_list = []
+        for rollout_id, rollout in self._completed_rollouts_v0.items():
+            final_reward = rollout.final_reward
+            if final_reward is None:
+                continue
+            if not rollout.triplets:
+                continue
+            original_sample = self._task_id_to_original_sample[rollout_id]
+            if original_sample.get("task_type", "") == "ruler":
+                response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
+                ruler_ret_list.append({
+                    "sub_task_type": original_sample["sub_task_type"],
+                    "length": original_sample["length"],
+                    "request_count": len(rollout.triplets),
+                    "reward": final_reward,
+                    "sum_response_length": np.sum(response_length_list),
+                })
+
+        if len(ruler_ret_list) > 0:
+            ret_df = pd.DataFrame(ruler_ret_list)
+            sub_task_types = ret_df.sub_task_type.drop_duplicates().tolist()
+            lengths = ret_df.length.drop_duplicates().tolist()
+            # op and length statistics
+            for sub_task_type in sub_task_types:
+                for length in lengths:
+                    sub_df = ret_df[(ret_df.sub_task_type == sub_task_type) & (ret_df.length == length)]
+                    if len(sub_df) > 0:
+                        metric_dict.update({
+                            f"val/ruler/{sub_task_type}_length={length}/reward": float(sub_df.reward.mean()),
+                            f"val/ruler/{sub_task_type}_length={length}/request_count": float(sub_df.request_count.mean()),
+                            f"val/ruler/{sub_task_type}_length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                        })
+            # sub_task_type
+            for sub_task_type in sub_task_types:
+                sub_df = ret_df[(ret_df.sub_task_type == sub_task_type)]
+                if len(sub_df) > 0:
+                    metric_dict.update({
+                        f"val/ruler/{sub_task_type}/reward": float(sub_df.reward.mean()),
+                        f"val/ruler/{sub_task_type}/request_count": float(sub_df.request_count.mean()),
+                        f"val/ruler/{sub_task_type}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                    })
+
+            # length
+            for length in lengths:
+                sub_df = ret_df[(ret_df.length == length)]
+                if len(sub_df) > 0:
+                    metric_dict.update({
+                        f"val/ruler/length={length}/reward": float(sub_df.reward.mean()),
+                        f"val/ruler/length={length}/request_count": float(sub_df.request_count.mean()),
+                        f"val/ruler/length={length}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                    })
+
+            # overall
+            metric_dict.update({
+                f"val/ruler/overall/reward": float(ret_df.reward.mean()),
+                f"val/ruler/overall/request_count": float(ret_df.request_count.mean()),
+                f"val/ruler/overall/sum_response_length": float(ret_df.sum_response_length.mean()),
             })
 
 

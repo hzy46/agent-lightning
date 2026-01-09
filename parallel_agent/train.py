@@ -16,8 +16,8 @@ verl_config = {
     },
     "data": {
         "train_batch_size": 16,
-        "max_prompt_length": 6192,
-        "max_response_length": 2000,
+        "max_prompt_length": 7168,
+        "max_response_length": 1024,
     },
     "actor_rollout_ref": {
         "rollout": {
