@@ -80,6 +80,7 @@ tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["mode
 @agl.rollout
 async def solver_agent(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    print(task["task_type"], task.keys())
     try:
         model = llm.model
         api_root_url = llm.endpoint
