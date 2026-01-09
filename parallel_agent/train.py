@@ -7,7 +7,7 @@ import json
 import copy
 from transformers import AutoTokenizer
 from eval.algorithms.parallel import async_fill_in_response as parallel_async_fill_in_response
-from eval.utils import score_func_gsm_infinite
+from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 
 verl_config = {
     "algorithm": {
@@ -68,8 +68,8 @@ verl_config = {
         "experiment_name": "train_new_qwen2.5-7b-instruct",
         "nnodes": 1,
         "save_freq": 500,
-        "test_freq": 25,
-        "total_epochs": 2,
+        "test_freq": 50,
+        "total_epochs": 10,
     },
 }
 
@@ -91,14 +91,19 @@ async def solver_agent(task, llm) -> None:
 
     assert task["task_type"] == "gsm_infinite"
 
-    reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
+    if task["task_type"] == "gsm_infinite":
+        reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
+    elif task["task_type"] == "ruler":
+        reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
+    else:
+        raise NotImplementedError
+
     # This reward will be tracked automatically
     agl.emit_reward(reward)
 
 
 if __name__ == "__main__":
-    train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_tail")
-    test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed")
+    train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
     rng = random.Random(42)
 
     train_sample_list = []
@@ -113,19 +118,29 @@ if __name__ == "__main__":
             train_sample_list.extend(data_list)
     rng.shuffle(train_sample_list)
 
+    # prepare_test
     test_sample_list = []
-    for file_name in [
-        "hard_8K.json", 
-        "hard_16K.json", 
-        # "hard_32K.json"
-    ]:
-        file_path = os.path.join(test_dataset_dir, file_name)
-        with open(file_path) as f:
-            data_list = json.load(f)
-            test_sample_list.extend(data_list)
-    rng.shuffle(test_sample_list)
+    # gsm_infinite
+    # gsm_test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
+    # for file_name in [
+    #     "hard_8K.json", 
+    #     "hard_16K.json", 
+    #     # "hard_32K.json"
+    # ]:
+    #     file_path = os.path.join(gsm_test_dataset_dir, file_name)
+    #     with open(file_path) as f:
+    #         data_list = json.load(f)
+    #         test_sample_list.extend(data_list)
+    # ruler
+    ruler_test_file_path = os.path.expanduser("~/ruler_mini.json")
+    with open(ruler_test_file_path) as f:
+        data_list = json.load(f)
+    test_sample_list.extend(data_list)
 
-    test_sample_list = test_sample_list[:100]
+
+    # rng.shuffle(test_sample_list)
+
+    # test_sample_list = test_sample_list[:100]
 
 
     algorithm = agl.VERL(verl_config)
