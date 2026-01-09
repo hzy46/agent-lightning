@@ -82,6 +82,7 @@ for is_tail in [False, True]:
                 "op": row["op"],
                 "id": row["id"],
                 "template": row["template"],
+                "length": row["length"],
                 "mode": row["mode"],
             })
         
