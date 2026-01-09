@@ -62,7 +62,7 @@ verl_config = {
     },
     "trainer": {
         "n_gpus_per_node": 4,
-        "val_before_train": True,
+        "val_before_train": False,
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "ParallelAgent",
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     for file_name in [
         "hard_8K.json", 
         "hard_16K.json", 
-        # "hard_32K.json"
+        "hard_32K.json"
     ]:
         file_path = os.path.join(gsm_test_dataset_dir, file_name)
         with open(file_path) as f:
