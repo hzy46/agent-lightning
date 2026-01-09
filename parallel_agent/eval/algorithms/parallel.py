@@ -129,7 +129,7 @@ def extract_tag(text: str, tag: str) -> str | None:
 
 
 async def call_llm(api_root_url, model, temperature, messages) -> str:
-    MAX_NEW = 1024
+    MAX_NEW = 2048
     top_p = 1
     session = await get_async_client()
     async with session:
