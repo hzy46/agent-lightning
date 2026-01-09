@@ -13,60 +13,7 @@ import fire
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
-
-import re
-
-def is_integer(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False 
-
-# evaluation function from gsm infinite
-def score_func(response, solution):
-    # solution 是 sample 中的，给答案提取出来
-    idx_answer_start = solution.find("Answer: ") 
-    idx_answer_end = solution.find(".", idx_answer_start) 
-    answer_text = solution[idx_answer_start + len("Answer: ") : idx_answer_end] 
-    answer_text = int(answer_text.lower()) 
-        
-    response = re.sub('.\x08', 'b', response)
-    response = response.lower() 
-
-    idx_generated_begin = -1
-    idx_generated_conclude = -1
-    keywords = ["answer: ", "solution: ", "oxed{", "**answer:** ", "**answer: ", "final answer: answer: ", "\nanswer: ", r"\text{answer: } ",  "is ", "answer: "] # updated 
-    keywordsend = [".", ".", "}", ".", "**", ".", ".", None, ".", "\n"] 
-    cnt = 0 
-
-    while not (idx_generated_begin != -1 and idx_generated_conclude != -1) and cnt < len(keywords): 
-        if keywords[cnt] in ["oxed{", "is "]: 
-            idx_generated_begin = response.rfind(keywords[cnt]) # this relies on the generated is stopped before generated next question plus onwoards by stop 
-        else: 
-            idx_generated_begin = response.find(keywords[cnt]) 
-        if idx_generated_begin != -1: 
-            if keywordsend[cnt] is None: 
-                idx_generated_conclude = idx_generated_begin + len(keywords[cnt]) 
-                while response[idx_generated_conclude].isdigit() == True: 
-                    idx_generated_conclude += 1 
-            else: 
-                idx_generated_conclude = response.find(keywordsend[cnt], idx_generated_begin + len(keywords[cnt])) 
-            if idx_generated_conclude == -1: 
-                idx_generated_conclude = len(response) 
-        if not is_integer(response[idx_generated_begin + len(keywords[cnt]) : idx_generated_conclude]): 
-            idx_generated_begin = -1 
-            idx_generated_conclude = -1 
-        cnt += 1 
-    
-    if idx_generated_begin == -1: 
-        return 0
-    else: 
-        try: 
-            answergenerated_text = int(response[idx_generated_begin + len(keywords[cnt - 1]) : idx_generated_conclude]) 
-        except: 
-            return 0
-        return int(answergenerated_text == answer_text)
+from utils import score_func_gsm_infinite as score_func
 
 
 def main(

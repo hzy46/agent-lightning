@@ -132,3 +132,56 @@ def score_func(task, answers, response):
     else:
         sub_em = calc_metrics([final_pred], [answers])['sub_em'] if final_pred else 0
         return {"sub_em": sub_em}
+
+
+def is_integer(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False 
+
+# evaluation function from gsm infinite
+def score_func_gsm_infinite(response, solution):
+    # solution 是 sample 中的，给答案提取出来
+    idx_answer_start = solution.find("Answer: ") 
+    idx_answer_end = solution.find(".", idx_answer_start) 
+    answer_text = solution[idx_answer_start + len("Answer: ") : idx_answer_end] 
+    answer_text = int(answer_text.lower()) 
+        
+    response = re.sub('.\x08', 'b', response)
+    response = response.lower() 
+
+    idx_generated_begin = -1
+    idx_generated_conclude = -1
+    keywords = ["answer: ", "solution: ", "oxed{", "**answer:** ", "**answer: ", "final answer: answer: ", "\nanswer: ", r"\text{answer: } ",  "is ", "answer: "] # updated 
+    keywordsend = [".", ".", "}", ".", "**", ".", ".", None, ".", "\n"] 
+    cnt = 0 
+
+    while not (idx_generated_begin != -1 and idx_generated_conclude != -1) and cnt < len(keywords): 
+        if keywords[cnt] in ["oxed{", "is "]: 
+            idx_generated_begin = response.rfind(keywords[cnt]) # this relies on the generated is stopped before generated next question plus onwoards by stop 
+        else: 
+            idx_generated_begin = response.find(keywords[cnt]) 
+        if idx_generated_begin != -1: 
+            if keywordsend[cnt] is None: 
+                idx_generated_conclude = idx_generated_begin + len(keywords[cnt]) 
+                while response[idx_generated_conclude].isdigit() == True: 
+                    idx_generated_conclude += 1 
+            else: 
+                idx_generated_conclude = response.find(keywordsend[cnt], idx_generated_begin + len(keywords[cnt])) 
+            if idx_generated_conclude == -1: 
+                idx_generated_conclude = len(response) 
+        if not is_integer(response[idx_generated_begin + len(keywords[cnt]) : idx_generated_conclude]): 
+            idx_generated_begin = -1 
+            idx_generated_conclude = -1 
+        cnt += 1 
+    
+    if idx_generated_begin == -1: 
+        return 0
+    else: 
+        try: 
+            answergenerated_text = int(response[idx_generated_begin + len(keywords[cnt - 1]) : idx_generated_conclude]) 
+        except: 
+            return 0
+        return int(answergenerated_text == answer_text)
