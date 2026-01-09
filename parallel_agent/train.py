@@ -114,7 +114,7 @@ def main(
     if len(train_doc_nums) > 0:
         experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
     if len(train_gsm_lengths) > 0:
-        experiment_name += "docs_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
+        experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     experiment_name = experiment_name.strip("_")
     verl_config["trainer"]["experiment_name"] = experiment_name
 
