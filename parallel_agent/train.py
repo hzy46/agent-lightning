@@ -110,7 +110,7 @@ if __name__ == "__main__":
     for file_name in [
         "hard_8K.json", 
         "hard_16K.json", 
-        # "hard_32K.json"
+        "hard_32K.json"
     ]:
         file_path = os.path.join(train_dataset_dir, file_name)
         with open(file_path) as f:
