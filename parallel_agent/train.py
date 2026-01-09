@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     rng.shuffle(test_sample_list)
 
-    test_sample_list = test_sample_list[:200]
+    test_sample_list = test_sample_list[:100]
 
 
     algorithm = agl.VERL(verl_config)
