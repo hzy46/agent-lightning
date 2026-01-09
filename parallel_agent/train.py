@@ -131,4 +131,4 @@ if __name__ == "__main__":
     # Set store=None to use managed store
     trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
 
-    trainer.fit(solver_agent, train_dataset, val_dataset=val_dataset)
+    trainer.fit(solver_agent, train_sample_list, val_dataset=test_sample_list)
