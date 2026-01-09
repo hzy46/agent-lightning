@@ -55,7 +55,7 @@ for is_tail in [False, True]:
                 current_filter = {key: value for key, value in config.items() if key not in ["percentage"]}
                 filtered_subset = dataset_split.filter(lambda example: all(example[key] == value for key, value in current_filter.items()))
                 # naive split by head and tail
-                assert num_to_add * 2 <= len(filtered_subset)
+                assert num_to_add * 2 <= len(filtered_subset), f"num_to_add: {num_to_add}  len(filtered_subset): {len(filtered_subset)}"
                 if is_tail:
                     filtered_data.extend(filtered_subset.select(range(len(filtered_subset) - num_to_add, len(filtered_subset))))
                 else:
