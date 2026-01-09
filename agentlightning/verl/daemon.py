@@ -729,6 +729,9 @@ class AgentModeDaemon:
             list
         )  # FIXME: Evaluate whether grouping stats by source is actually needed.
 
+
+        breakpoint()
+
         for rollout_id, rollout in self._completed_rollouts_v0.items():
             final_reward_raw: Optional[float] = rollout.final_reward
             final_reward = self._fillna_reward(rollout)
@@ -802,6 +805,7 @@ class AgentModeDaemon:
                 "val/turn_count": np.mean([stat["turn_count"] for stat in stats_w_trace]),
             }
         )
+        breakpoint()
         return metric_dict
 
     def get_train_data_batch(
