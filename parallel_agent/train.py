@@ -61,7 +61,7 @@ verl_config = {
     },
     "trainer": {
         "n_gpus_per_node": 4,
-        "val_before_train": False,
+        "val_before_train": True,
         "critic_warmup": 0,
         "logger": ["console", "wandb"],
         "project_name": "ParallelAgent",
