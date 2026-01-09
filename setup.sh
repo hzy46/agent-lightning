@@ -53,6 +53,7 @@ source ~/.bashrc
 
 conda activate agl
 
+pip install fire
 cd ~/agent-lightning/
 pip install -e .
 
