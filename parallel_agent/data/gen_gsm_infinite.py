@@ -18,22 +18,25 @@ for key, hints in type_to_hint_list.items():
     type_to_hint[key] = hints[0]
 
 
+train_limit_n_per_op = 300
+test_limit_n_per_op = 100
+all_limit_n_per_op = train_limit_n_per_op + test_limit_n_per_op
+
 # split to different parts
-for is_tail in [False, True]:
-    if is_tail is True:
+for is_train in [False, True]:
+    if is_train is True:
         length_strs = ["8K", "16K", "32K"]
+        limit_n_per_op = train_limit_n_per_op #  乘 0.05，0.4 后要是整数不然会被约去少量样本
+        save_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
     else:
         length_strs = ["8K", "16K", "32K", "64K", "128K"]
+        limit_n_per_op = test_limit_n_per_op #  乘 0.05，0.4 后要是整数不然会被约去少量样本
+        save_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
+    if os.path.exists(save_dir) is False:
+        os.makedirs(save_dir)
     for length_str in length_strs:
-        limit_n_per_op = 200 #  乘 0.05，0.4 后要是整数不然会被约去少量样本
         dataset_name = f"InfiniAILab/gsm_infinite_hard_{length_str}"
         op_list = [2, 4, 6, 8, 10]
-        if is_tail:
-            save_dir = os.path.expanduser("~/gsm_infinite_parsed_tail")
-        else:
-            save_dir = os.path.expanduser("~/gsm_infinite_parsed")
-        if os.path.exists(save_dir) is False:
-            os.makedirs(save_dir)
         save_path = os.path.join(save_dir, "hard_{}.json".format(length_str))
         
         full_dataset = load_dataset(dataset_name)
@@ -52,19 +55,20 @@ for is_tail in [False, True]:
         filtered_datasets = []
         for split in subsets:
             dataset_split = full_dataset[split]
-            total_samples = min(limit_n_per_op, len(dataset_split))
+            total_samples = limit_n_per_op
             filtered_data = []
             for config in filter_config:
                 num_to_add = int(total_samples * config["percentage"])
+                num_to_add_for_train_test = ceil(all_limit_n_per_op * config["percentage"])
                 current_filter = {key: value for key, value in config.items() if key not in ["percentage"]}
                 filtered_subset = dataset_split.filter(lambda example: all(example[key] == value for key, value in current_filter.items()))
                 # naive split by head and tail
                 if length_str in ["8K", "16K", "32K"]: # both in train and test
-                    assert num_to_add * 2 <= len(filtered_subset), f"num_to_add: {num_to_add}  len(filtered_subset): {len(filtered_subset)}"
-                if is_tail:
+                    assert num_to_add_for_train_test <= len(filtered_subset), f"num_to_add_for_train_test: {num_to_add_for_train_test}  len(filtered_subset): {len(filtered_subset)}"
+                if is_train:
                     filtered_data.extend(filtered_subset.select(range(len(filtered_subset) - num_to_add, len(filtered_subset))))
                 else:
-                    filtered_data.extend(filtered_subset.select(range(min(num_to_add, len(filtered_subset)))))
+                    filtered_data.extend(filtered_subset.select(range(num_to_add)))
             filtered_datasets.append(Dataset.from_list(filtered_data))
             print(f"split={split} sample_num={len(filtered_data)}")
         unprocessed_dataset = concatenate_datasets(filtered_datasets)
