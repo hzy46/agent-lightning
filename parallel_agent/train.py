@@ -16,7 +16,7 @@ verl_config = {
     },
     "data": {
         "train_batch_size": 16,
-        "max_prompt_length": 7168,
+        "max_prompt_length": 10240,
         "max_response_length": 1024,
     },
     "actor_rollout_ref": {
@@ -88,8 +88,6 @@ async def solver_agent(task, llm) -> None:
     except Exception as e:
         print("Failure:", str(e))
         task["response"] = ""
-
-    assert task["task_type"] == "gsm_infinite"
 
     if task["task_type"] == "gsm_infinite":
         reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
