@@ -739,7 +739,7 @@ class AgentModeDaemon:
                 continue
             if not rollout.triplets:
                 continue
-            original_sample = self._task_id_to_original_sample[rollout_id]
+            original_sample = self._task_id_to_original_sample[rollout_id]['data']
             if original_sample.get("task_type", "") == "gsm_infinite":
                 response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
                 gsm_ret_list.append({
@@ -799,7 +799,7 @@ class AgentModeDaemon:
                 continue
             if not rollout.triplets:
                 continue
-            original_sample = self._task_id_to_original_sample[rollout_id]
+            original_sample = self._task_id_to_original_sample[rollout_id]['data']
             if original_sample.get("task_type", "") == "ruler":
                 response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
                 ruler_ret_list.append({
