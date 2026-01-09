@@ -80,12 +80,11 @@ tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["mode
 @agl.rollout
 async def solver_agent(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
-    print(task["task_type"], task.keys())
     try:
         model = llm.model
         api_root_url = llm.endpoint
         temperature = llm.sampling_parameters.get("temperature", 1.0)
-        task = copy.deepcopy(task)
+        task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         await parallel_async_fill_in_response(api_root_url, task, model, tokenizer, task["task_type"], temperature)
     except Exception as e:
         print("Failure:", traceback.format_exc())
@@ -115,7 +114,11 @@ if __name__ == "__main__":
         file_path = os.path.join(train_dataset_dir, file_name)
         with open(file_path) as f:
             data_list = json.load(f)
-            train_sample_list.extend(data_list)
+        for data in data_list:
+            train_sample_list.append({
+                "data": data
+            })
+
     rng.shuffle(train_sample_list)
 
     # prepare_test
@@ -130,12 +133,19 @@ if __name__ == "__main__":
         file_path = os.path.join(gsm_test_dataset_dir, file_name)
         with open(file_path) as f:
             data_list = json.load(f)
-            test_sample_list.extend(data_list)
+        for data in data_list:
+            test_sample_list.append({
+                "data": data  # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
+            })
     # ruler
     ruler_test_file_path = os.path.expanduser("~/ruler_mini.json")
     with open(ruler_test_file_path) as f:
         data_list = json.load(f)
-    test_sample_list.extend(data_list)
+    for data in data_list:
+        test_sample_list.append({
+            "data": data
+        })
+
     rng.shuffle(test_sample_list)
 
     # test_sample_list = test_sample_list[:100]
