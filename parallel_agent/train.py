@@ -109,10 +109,10 @@ async def solver_agent_parallel(task, llm, use_token_penalty, token_penalty_L, t
     # during training
     if temperature != 0 and use_token_penalty:
         output_token_num = task["output_token_num"]
-        if output_token_num <= L:
+        if output_token_num <= token_penalty_L:
             cost = 0
         else:
-            cost = 1 - math.exp(-k * (output_token_num - L))
+            cost = 1 - math.exp(-token_penalty_k * (output_token_num - token_penalty_L))
         print(f"reward: {reward}  cost: {cost} reward - cost: {reward - cost}")
         reward = reward - cost
 
