@@ -83,7 +83,7 @@ async def _async_fill_in_response(api_root_url, model, sample, task_type, temper
         try:
             async with session.post(
                 url= api_root_url + "/chat/completions",
-                headers={"Authorization": f"Bearer {API_KEY}"},
+                headers={"Authorization": f"Bearer dummy"},
                 json=dict(model=model,
                     messages=[{"role": "user", "content": prompt}],
                     temperature=temperature,
