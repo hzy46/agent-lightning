@@ -84,7 +84,7 @@ tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["mode
 
 
 @agl.rollout
-async def solver_agent_parallel(task, llm) -> None:
+async def solver_agent_parallel(task, llm, use_token_penalty, token_penalty_L, token_penalty_k) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
         model = llm.model
@@ -105,6 +105,16 @@ async def solver_agent_parallel(task, llm) -> None:
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
     else:
         raise NotImplementedError
+
+    # during training
+    if temperature != 0 and use_token_penalty:
+        output_token_num = task["output_token_num"]
+        if output_token_num <= L:
+            cost = 0
+        else:
+            cost = 1 - math.exp(-k * (output_token_num - L))
+        print(f"reward: {reward}  cost: {cost} reward - cost: {reward - cost}")
+        reward = reward - cost
 
     # This reward will be tracked automatically
     agl.emit_reward(reward)
@@ -137,7 +147,7 @@ async def solver_agent_normal(task, llm) -> None:
     agl.emit_reward(reward)
 
 @agl.rollout
-async def solver_agent_memagent(task, llm, use_token_penalty, token_penalty_L, token_penalty_k) -> None:
+async def solver_agent_memagent(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
         model = llm.model
@@ -159,15 +169,6 @@ async def solver_agent_memagent(task, llm, use_token_penalty, token_penalty_L, t
     else:
         raise NotImplementedError
 
-    # during training
-    if temperature != 0 and use_token_penalty:
-        output_token_num = task["output_token_num"]
-        if output_token_num <= L:
-            cost = 0
-        else:
-            cost = 1 - math.exp(-k * (output_token_num - L))
-        print(f"reward: {reward}  cost: {cost} reward - cost: {reward - cost}")
-        reward = reward - cost
     # This reward will be tracked automatically
     agl.emit_reward(reward)
 
