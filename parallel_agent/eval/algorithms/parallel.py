@@ -243,6 +243,7 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
 
     input_ids = tokenizer.encode(context, add_special_tokens=False)
     chunks = []
+    print("chunk_size", chunk_size)
     for i in range(0, len(input_ids), chunk_size):
         chunk_ids = input_ids[i:i + chunk_size]
         chunk = tokenizer.decode(chunk_ids)
