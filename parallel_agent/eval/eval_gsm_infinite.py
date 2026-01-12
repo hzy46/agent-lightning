@@ -36,6 +36,7 @@ def main(
     save_root_dir="results/",
     limit_n=None,
     max_workers=None,
+    keep_origin=False,
 ):
     base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
@@ -174,9 +175,10 @@ def main(
             print(f"task_op: {task_op} length_str: {length_str} score: {np.mean([sample['score'] for sample in samples]):.2f}")
             
             with open(result_save_path, "w") as f:
-                for sample in samples:
-                    del sample["context"]
-                    del sample["query"]
+                if keep_origin is False:
+                    for sample in samples:
+                        del sample["context"]
+                        del sample["query"]
                 json.dump(samples, f)
 
 if __name__ == "__main__":
