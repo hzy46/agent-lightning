@@ -61,8 +61,6 @@ def fill_in_response(api_root_url, model, sample, task_type):
 
 
 
-
-
 async def _async_fill_in_response(api_root_url, model, sample, task_type, temperature=0):
     if task_type == "ruler":
         max_new_tokens = 8192
