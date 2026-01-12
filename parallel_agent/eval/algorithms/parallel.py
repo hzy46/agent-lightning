@@ -225,7 +225,7 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
         result = await run_central_agent(api_root_url, model, temperature, current_query, round_report, history_messages, task_type, log_dict)
 
         if result["type"] == "answer":
-            return result["content"], history_messages
+            return result["content"], history_messages, log_dict["all_responses"]
 
         # 更新 query
         current_query = result["content"]
