@@ -190,7 +190,6 @@ def main(
         verl_config["data"]["max_response_length"] = 2048
         verl_config["actor_rollout_ref"]["actor"]['ppo_mini_batch_size'] = 32
         verl_config["actor_rollout_ref"]["actor"]['ppo_micro_batch_size_per_gpu'] = 2
-        verl_config["data"]["max_prompt_length"] = 14000
     elif method == "parallel":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
