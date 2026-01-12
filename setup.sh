@@ -57,8 +57,8 @@ pip install fire
 cd ~/agent-lightning/
 pip install -e .
 
- pip install ipykernel
- python -m ipykernel install --user --name agl --display-name agl
+pip install ipykernel
+python -m ipykernel install --user --name agl --display-name agl
 
- source ~/azureml_job_env.sh
- cp -r $ZHIYUHE/Qwen2.5-7B-Instruct-Yarn/ ~
+source ~/azureml_job_env.sh
+cp -r $ZHIYUHE/Qwen2.5-7B-Instruct-Yarn/ ~
