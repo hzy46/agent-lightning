@@ -37,7 +37,7 @@ def main(
     limit_n=None,
     max_workers=None,
 ):
-    base_dir = os.path.expanduser("~/gsm_infinite_parsed")
+    base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
 
     if os.path.exists(model):
