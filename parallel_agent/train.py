@@ -164,6 +164,7 @@ async def solver_agent_memagent(task, llm) -> None:
 method_to_agent_func = {
     "normal": solver_agent_normal,
     "parallel": solver_agent_parallel,
+    "memagent": solver_agent_memagent,
 }
 
 def main(
