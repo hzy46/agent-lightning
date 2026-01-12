@@ -37,6 +37,8 @@ def main(
     limit_n=None,
     max_workers=None,
     keep_origin=False,
+    max_rounds=3,
+    chunk_size=5000,
 ):
     base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
@@ -87,7 +89,10 @@ def main(
                 samples = samples[:limit_n]
                 print(f"limit samples to {limit_n}")
 
-            model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
+            if method == "parallel":
+                model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model.split("/")[-1].lower()))
+            else:
+                model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
             result_save_path = os.path.join(model_save_dir, "gsm_result_{}_{}.json".format(task_op, length_str))
             if os.path.exists(model_save_dir) is False:
                 os.makedirs(model_save_dir)
@@ -153,6 +158,8 @@ def main(
                                 model,
                                 tokenizer,
                                 "gsm_infinite"
+                                chunk_size,
+                                max_rounds,
                             )
                         )
                         for sample in samples

@@ -7,7 +7,7 @@ import aiohttp
 async def get_async_client():
     return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
 
-CHUNK_SIZE = 5000
+
 MAX_ROUNDS = 3
 
 
@@ -204,10 +204,10 @@ async def run_central_agent(api_root_url, model, temperature, query, round_repor
     return {"type": "answer", "content": ""}
 
 
-async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str], query: str, task_type) -> tuple[str, list]:
+async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str], query: str, task_type, max_rounds=3) -> tuple[str, list]:
     current_query = query
     history_messages = []
-    for round_idx in range(1, MAX_ROUNDS + 1):
+    for round_idx in range(1, max_rounds + 1):
         tasks = [
             run_chunk_agent(api_root_url, model, temperature, chunk, current_query, i + 1, len(chunks))
             for i, chunk in enumerate(chunks)
@@ -228,7 +228,7 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
     return "", history_messages
 
 
-async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0):
+async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
     if task_type == "ruler":
         context = sample["context"].strip()
         query = sample['input'].strip()
@@ -243,16 +243,16 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
 
     input_ids = tokenizer.encode(context, add_special_tokens=False)
     chunks = []
-    for i in range(0, len(input_ids), CHUNK_SIZE):
-        chunk_ids = input_ids[i:i+CHUNK_SIZE]
+    for i in range(0, len(input_ids), chunk_size):
+        chunk_ids = input_ids[i:i + chunk_size]
         chunk = tokenizer.decode(chunk_ids)
         chunks.append(chunk)
 
-    response, history_messages = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type)
+    response, history_messages = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type, max_rounds)
     sample["history_messages"] = history_messages
     sample["response"] = response
 
-async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0):
+async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
     async with semaphore:
-        await async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature)
+        await async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature, chunk_size, max_rounds)
 
