@@ -8,6 +8,7 @@ import copy
 from transformers import AutoTokenizer
 from eval.algorithms.parallel import async_fill_in_response as parallel_async_fill_in_response
 from eval.algorithms.normal import async_fill_in_response as normal_async_fill_in_response
+from eval.algorithms.memagent import async_fill_in_response as memagent_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 
 import traceback
@@ -117,6 +118,32 @@ async def solver_agent_normal(task, llm) -> None:
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # print(task["task_type"], task.keys())
         await normal_async_fill_in_response(api_root_url, model, task, task["task_type"], temperature)
+    except Exception as e:
+        print("Failure:", traceback.format_exc())
+        task["response"] = ""
+
+    if task["task_type"] == "gsm_infinite":
+        reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
+    elif task["task_type"] == "ruler":
+        reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
+    elif task["task_type"] == "memagent_train":
+        reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
+    else:
+        raise NotImplementedError
+
+    # This reward will be tracked automatically
+    agl.emit_reward(reward)
+
+@agl.rollout
+async def solver_agent_memagent(task, llm) -> None:
+    # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    try:
+        model = llm.model
+        api_root_url = llm.endpoint
+        temperature = llm.sampling_parameters.get("temperature", 1.0)
+        task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
+        # print(task["task_type"], task.keys())
+        await memagent_async_fill_in_response(api_root_url, task, model, tokenizer, task["task_type"], temperature)
     except Exception as e:
         print("Failure:", traceback.format_exc())
         task["response"] = ""
