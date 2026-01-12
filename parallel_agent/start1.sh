@@ -10,4 +10,4 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
     # NCCL_P2P_DISABLE=1 \
     # NCCL_CUMEM_HOST_ENABLE=0 \
 
-python train.py --train_doc_nums "[]" --train_gsm_lengths "['8K', '16K']"
+python train.py --method normal
