@@ -83,8 +83,14 @@ verl_config = {
 tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["model"]["path"])
 
 
+parallel_config = {
+    "use_token_penalty": False,
+    "token_penalty_L": 1024,
+    "token_penalty_k": 0.0001,
+}
+
 @agl.rollout
-async def solver_agent_parallel(task, llm, use_token_penalty, token_penalty_L, token_penalty_k) -> None:
+async def solver_agent_parallel(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
         model = llm.model
@@ -107,6 +113,9 @@ async def solver_agent_parallel(task, llm, use_token_penalty, token_penalty_L, t
         raise NotImplementedError
 
     # during training
+    use_token_penalty = parallel_config['use_token_penalty']
+    token_penalty_L = parallel_config['token_penalty_L']
+    token_penalty_k = parallel_config['token_penalty_k']
     if temperature != 0 and use_token_penalty:
         output_token_num = task["output_token_num"]
         if output_token_num <= token_penalty_L:
@@ -212,6 +221,9 @@ def main(
     elif method == "parallel":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
+        parallel_config['use_token_penalty'] = use_token_penalty
+        parallel_config['token_penalty_L'] = token_penalty_L
+        parallel_config['token_penalty_k'] = token_penalty_k
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
@@ -287,17 +299,9 @@ def main(
     # Set store=None to use managed store
     trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
 
-    if method == "parallel":
-        agent_func = partial(
-            method_to_agent_func[method],
-            use_token_penalty=use_token_penalty,
-            token_penalty_L=token_penalty_L,
-            token_penalty_k=token_penalty_k,
-        )
-        trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
-    else:
-        agent_func = method_to_agent_func[method]
-        trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
+
+    agent_func = method_to_agent_func[method]
+    trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
 
 
 if __name__ == "__main__":
