@@ -128,7 +128,7 @@ def extract_tag(text: str, tag: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
-async def call_llm(api_root_url, model, temperature, messages) -> str:
+async def call_llm(api_root_url, model, temperature, messages, log_dict) -> str:
     MAX_NEW = 1024
     top_p = 1
     session = await get_async_client()
@@ -148,9 +148,11 @@ async def call_llm(api_root_url, model, temperature, messages) -> str:
                 print(f"{status=}, {model=}")
                 return ""
             data = await resp.json()
-            return data['choices'][0]['message']['content']
+            response = data['choices'][0]['message']['content']
+            log_dict["all_responses"].append(response)
+            return response
 
-async def run_chunk_agent(api_root_url, model, temperature, chunk_text: str, query: str, idx: int, total: int,) -> str:
+async def run_chunk_agent(api_root_url, model, temperature, chunk_text: str, query: str, idx: int, total: int, log_dict) -> str:
     prompt = chunk_prompt_template.format(
         chunk_index=idx,
         chunk_total=total,
@@ -158,7 +160,7 @@ async def run_chunk_agent(api_root_url, model, temperature, chunk_text: str, que
         query=query
     )
     messages = [{"role": "user", "content": prompt}]
-    output = await call_llm(api_root_url, model, temperature, messages)
+    output = await call_llm(api_root_url, model, temperature, messages, log_dict)
 
     # if random.random() <= 0.001:
         # print("\n------chunk agent log starts-----\n", prompt, "\n*\n", output, "\n-------chunk agent log ends------\n")
@@ -168,7 +170,7 @@ async def run_chunk_agent(api_root_url, model, temperature, chunk_text: str, que
         return f"[Chunk {idx} Report]\n{report}"
     return ""
 
-async def run_central_agent(api_root_url, model, temperature, query, round_report, history_messages, task_type) -> dict:
+async def run_central_agent(api_root_url, model, temperature, query, round_report, history_messages, task_type, log_dict) -> dict:
 
     if task_type == "ruler" or task_type == "memagent_train":
         central_prompt_template = central_prompt_template_ruler
@@ -186,7 +188,7 @@ async def run_central_agent(api_root_url, model, temperature, query, round_repor
             query=query,
             round_report=round_report
         )})
-    output = await call_llm(api_root_url, model, temperature, history_messages)
+    output = await call_llm(api_root_url, model, temperature, history_messages, log_dict)
 
     # if random.random() <= 0.01:
         # print("\n-------central agent log starts-------\n", "\n*\n".join([entry["content"] for entry in history_messages]), "\n*\n", output, "\n-------central agent log ends-----\n")
@@ -207,9 +209,12 @@ async def run_central_agent(api_root_url, model, temperature, query, round_repor
 async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str], query: str, task_type, max_rounds=3) -> tuple[str, list]:
     current_query = query
     history_messages = []
+    log_dict = {
+        "all_responses": []
+    }
     for round_idx in range(1, max_rounds + 1):
         tasks = [
-            run_chunk_agent(api_root_url, model, temperature, chunk, current_query, i + 1, len(chunks))
+            run_chunk_agent(api_root_url, model, temperature, chunk, current_query, i + 1, len(chunks), log_dict)
             for i, chunk in enumerate(chunks)
         ]
         chunk_reports = await asyncio.gather(*tasks)
@@ -217,7 +222,7 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
         round_report = "\n\n".join([r for r in chunk_reports if r])
 
         # 跑 query agent
-        result = await run_central_agent(api_root_url, model, temperature, current_query, round_report, history_messages, task_type)
+        result = await run_central_agent(api_root_url, model, temperature, current_query, round_report, history_messages, task_type, log_dict)
 
         if result["type"] == "answer":
             return result["content"], history_messages
@@ -225,7 +230,7 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
         # 更新 query
         current_query = result["content"]
 
-    return "", history_messages
+    return "", history_messages, log_dict["all_responses"]
 
 
 async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
@@ -249,9 +254,15 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
         chunk = tokenizer.decode(chunk_ids)
         chunks.append(chunk)
 
-    response, history_messages = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type, max_rounds)
+    response, history_messages, all_responses = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type, max_rounds)
     sample["history_messages"] = history_messages
     sample["response"] = response
+
+    # for token penalty, this may affect timing
+    output_token_num = 0
+    for response in all_responses:
+        output_token_num += len(tokenizer.encode(response, add_special_tokens=False))
+    sample["output_token_num"] = output_token_num
 
 async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
     async with semaphore:

@@ -13,6 +13,8 @@ from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 
 import traceback
 import fire
+from functools import partial
+import math
 
 verl_config = {
     "algorithm": {
@@ -135,7 +137,7 @@ async def solver_agent_normal(task, llm) -> None:
     agl.emit_reward(reward)
 
 @agl.rollout
-async def solver_agent_memagent(task, llm) -> None:
+async def solver_agent_memagent(task, llm, use_token_penalty, token_penalty_L, token_penalty_k) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     try:
         model = llm.model
@@ -157,6 +159,15 @@ async def solver_agent_memagent(task, llm) -> None:
     else:
         raise NotImplementedError
 
+    # during training
+    if temperature != 0 and use_token_penalty:
+        output_token_num = task["output_token_num"]
+        if output_token_num <= L:
+            cost = 0
+        else:
+            cost = 1 - math.exp(-k * (output_token_num - L))
+        print(f"reward: {reward}  cost: {cost} reward - cost: {reward - cost}")
+        reward = reward - cost
     # This reward will be tracked automatically
     agl.emit_reward(reward)
 
@@ -172,6 +183,9 @@ def main(
     train_gsm_lengths=["16K"],
     method="parallel",
     eval_ruler=False,
+    use_token_penalty=False,
+    token_penalty_L=1024,
+    token_penalty_k=0.0001,
 ):
 
     # set name according to paras
@@ -180,9 +194,11 @@ def main(
         experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
     if len(train_gsm_lengths) > 0:
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
+    if use_token_penalty:
+        experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
+
     experiment_name = experiment_name.strip("_")
     verl_config["trainer"]["experiment_name"] = experiment_name
-
 
     # adjust parameter
     if method == "normal":
@@ -191,12 +207,14 @@ def main(
         verl_config["data"]["max_response_length"] = 2048
         verl_config["actor_rollout_ref"]["actor"]['ppo_mini_batch_size'] = 32
         verl_config["actor_rollout_ref"]["actor"]['ppo_micro_batch_size_per_gpu'] = 2
+        assert use_token_penalty is False
     elif method == "parallel":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
+        assert use_token_penalty is False
 
 
     rng = random.Random(42)
@@ -268,8 +286,17 @@ def main(
     # Set store=None to use managed store
     trainer = agl.Trainer(algorithm=algorithm, n_runners=n_runners, store=None, tracer=tracer, adapter=adapter)
 
-    agent_func = method_to_agent_func[method]
-    trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
+    if method == "parallel":
+        agent_func = partial(
+            method_to_agent_func[method],
+            use_token_penalty=use_token_penalty,
+            token_penalty_L=token_penalty_L,
+            token_penalty_k=token_penalty_k,
+        )
+        trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
+    else:
+        agent_func = method_to_agent_func[method]
+        trainer.fit(agent_func, train_sample_list, val_dataset=test_sample_list)
 
 
 if __name__ == "__main__":
