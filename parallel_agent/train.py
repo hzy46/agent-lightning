@@ -124,7 +124,7 @@ async def solver_agent_parallel(task, llm) -> None:
             cost = 1 - math.exp(-token_penalty_k * (output_token_num - token_penalty_L))
         # only apply on positive reward
         if reward > 0:
-            print(f"reward: {reward}  cost: {cost} reward - cost: {reward - cost}")
+            print(f"reward: {reward}  output_token_num: {output_token_num} cost: {cost} reward - cost: {reward - cost}")
             reward = reward - cost
 
     # This reward will be tracked automatically
