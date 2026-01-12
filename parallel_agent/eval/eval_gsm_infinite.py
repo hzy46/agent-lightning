@@ -157,7 +157,7 @@ def main(
                                 sample,
                                 model,
                                 tokenizer,
-                                "gsm_infinite"
+                                "gsm_infinite",
                                 chunk_size,
                                 max_rounds,
                             )
