@@ -116,7 +116,7 @@ async def solver_agent_normal(task, llm) -> None:
         temperature = llm.sampling_parameters.get("temperature", 1.0)
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # print(task["task_type"], task.keys())
-        await normal_async_fill_in_response(api_root_url, modelm task, task["task_type"], temperature)
+        await normal_async_fill_in_response(api_root_url, model, task, task["task_type"], temperature)
     except Exception as e:
         print("Failure:", traceback.format_exc())
         task["response"] = ""
