@@ -158,8 +158,8 @@ def main(
                                 model,
                                 tokenizer,
                                 "gsm_infinite",
-                                chunk_size,
-                                max_rounds,
+                                chunk_size=chunk_size,
+                                max_rounds=max_rounds,
                             )
                         )
                         for sample in samples
