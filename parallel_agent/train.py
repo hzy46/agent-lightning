@@ -192,7 +192,7 @@ method_to_agent_func = {
 
 def main(
     train_doc_nums=[],
-    train_gsm_lengths=["8k", "16K"],
+    train_gsm_lengths=["8K", "16K"],
     method="parallel",
     eval_ruler=False,
     use_token_penalty=False,
