@@ -16,7 +16,7 @@ IFS=',' read -r -a steps <<< "$steps_csv"
 # 3. 循环执行 merge
 for step in "${steps[@]}"; do
   local_dir="parallel_agent/checkpoints/ParallelAgent/${exp_name}/global_step_${step}/actor/"
-  target_dir="~/models/${exp_name}/global_step_${step}"
+  target_dir="/home/aiscuser/models/${exp_name}/global_step_${step}"
   mkdir -p $target_dir
 
   echo ">>> merging step ${step} ..."
