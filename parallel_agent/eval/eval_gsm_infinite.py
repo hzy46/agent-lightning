@@ -64,7 +64,7 @@ def main(
         elif method == "memagent":
             max_workers = 50
         elif method == "parallel":
-            max_workers = 5
+            max_workers = 10
         else:
             raise NotImplementedError
 
