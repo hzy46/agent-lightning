@@ -45,10 +45,10 @@ def main(
 
     if "global_step_" in model:
         model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
-        model = model.split("/")[-1] 
+        model = model.strip("/").split("/")[-1] 
     elif os.path.exists(model):
         # it is a path
-        model = model.split("/")[-1]
+        model = model.strip("/").split("/")[-1]
         model_save_name = model.lower()
     else:
         model_save_name = model.split("/")[-1].lower()
