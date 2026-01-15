@@ -43,9 +43,17 @@ def main(
     base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    if os.path.exists(model):
+    if "global_step" in model:
+        model_save_name = model.strip("/").split("/")[-2].lower()
+        model = model.split("/")[-1] 
+    elif os.path.exists(model):
         # it is a path
         model = model.split("/")[-1]
+        model_save_name = model.lower()
+    else:
+        model_save_name = model.split("/")[-1].lower()
+
+
 
     api_root_url = "http://localhost:8000/v1"
     
@@ -90,9 +98,9 @@ def main(
                 print(f"limit samples to {limit_n}")
 
             if method == "parallel":
-                model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model.split("/")[-1].lower()))
+                model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
             else:
-                model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
+                model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model_save_name))
             result_save_path = os.path.join(model_save_dir, "gsm_result_{}_{}.json".format(task_op, length_str))
             if os.path.exists(model_save_dir) is False:
                 os.makedirs(model_save_dir)
