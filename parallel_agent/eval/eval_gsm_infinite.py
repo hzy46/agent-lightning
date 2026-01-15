@@ -43,8 +43,8 @@ def main(
     base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    if "global_step" in model:
-        model_save_name = model.strip("/").split("/")[-2].lower()
+    if "global_step_" in model:
+        model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
         model = model.split("/")[-1] 
     elif os.path.exists(model):
         # it is a path
@@ -52,6 +52,7 @@ def main(
         model_save_name = model.lower()
     else:
         model_save_name = model.split("/")[-1].lower()
+    print("model_save_name", model_save_name)
 
 
 
