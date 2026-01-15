@@ -100,6 +100,8 @@ def main(
 
             if method == "parallel":
                 model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+            elif method == 'memagent':
+                model_save_dir = os.path.join(save_root_dir,  "{}_chunk{}_{}".format(method, chunk_size, model_save_name))
             else:
                 model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model_save_name))
             result_save_path = os.path.join(model_save_dir, "gsm_result_{}_{}.json".format(task_op, length_str))
@@ -142,7 +144,8 @@ def main(
                                 sample,
                                 model,
                                 tokenizer,
-                                "gsm_infinite"
+                                "gsm_infinite",
+                                chunk_size=chunk_size,
                             )
                         )
                         for sample in samples

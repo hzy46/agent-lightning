@@ -74,8 +74,8 @@ template_final_gsm_infinite = """You are presented with a problem and a previous
 no_memory = "No previous memory"
 
 
-async def _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0):
-    RECURRENT_CHUNK_SIZE = 5000
+async def _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000):
+    RECURRENT_CHUNK_SIZE = chunk_size
     RECURRENT_MAX_NEW = 1024
     top_p = 1
     API_KEY = "dummy"
@@ -148,15 +148,15 @@ async def _async_fill_in_response(api_root_url, sample, model, tokenizer, task_t
             traceback.print_exc()
         return '', history_memory_list
 
-async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0):
+async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000):
     async with semaphore:
-        response, history_memory_list = await _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature)
+        response, history_memory_list = await _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature, chunk_size)
         sample["history_memory_list"] = history_memory_list
         sample["response"] = response
 
 
-async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0):
-    response, history_memory_list = await _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature)
+async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000):
+    response, history_memory_list = await _async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature, chunk_size)
     sample["history_memory_list"] = history_memory_list
     sample["response"] = response
 
