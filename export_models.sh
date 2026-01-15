@@ -20,7 +20,7 @@ for step in "${steps[@]}"; do
   mkdir -p $target_dir
 
   echo ">>> merging step ${step} ..."
-  python scripts/model_merger.py merge \
+  python model_merger.py merge \
     --backend fsdp \
     --local_dir "$local_dir" \
     --target_dir $target_dir
