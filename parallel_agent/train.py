@@ -63,7 +63,7 @@ verl_config = {
         "model": {
             # "path": os.path.expanduser("~/Qwen2.5-7B-Instruct-Yarn"),
             # "path": os.path.expanduser("Qwen/Qwen2.5-7B-Instruct"),
-            "path": os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K"),
+            "path": os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
             "use_remove_padding": True,
             "enable_gradient_checkpointing": True,
         },
