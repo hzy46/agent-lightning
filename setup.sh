@@ -64,3 +64,4 @@ python -m ipykernel install --user --name agl --display-name agl
 
 source ~/azureml_job_env.sh
 # cp -r $ZHIYUHE/Qwen2.5-7B-Instruct-Yarn/ ~
+cp -r $ZHIYUHE/models/train_qwen2.5-7b_normal_gsm_8K ~

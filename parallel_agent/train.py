@@ -62,7 +62,8 @@ verl_config = {
         },
         "model": {
             # "path": os.path.expanduser("~/Qwen2.5-7B-Instruct-Yarn"),
-            "path": os.path.expanduser("Qwen/Qwen2.5-7B-Instruct"),
+            # "path": os.path.expanduser("Qwen/Qwen2.5-7B-Instruct"),
+            "path": os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K"),
             "use_remove_padding": True,
             "enable_gradient_checkpointing": True,
         },
@@ -202,7 +203,7 @@ def main(
 ):
 
     # set name according to paras
-    experiment_name = f"train_qwen2.5-7b_{method}_"
+    experiment_name = f"train_from_gsm_8k_step500_qwen2.5-7b_{method}_"
     if len(train_doc_nums) > 0:
         experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
     if len(train_gsm_lengths) > 0:
