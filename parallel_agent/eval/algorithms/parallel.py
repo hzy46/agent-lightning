@@ -233,7 +233,7 @@ async def run_query_pipeline(api_root_url, model, temperature, chunks: list[str]
     return "", history_messages, log_dict["all_responses"]
 
 
-async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
+async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3, fix_chunk_num=None):
     if task_type == "ruler":
         context = sample["context"].strip()
         query = sample['input'].strip()
@@ -248,11 +248,18 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
 
     input_ids = tokenizer.encode(context, add_special_tokens=False)
     chunks = []
-    # print("chunk_size", chunk_size)
-    for i in range(0, len(input_ids), chunk_size):
-        chunk_ids = input_ids[i:i + chunk_size]
-        chunk = tokenizer.decode(chunk_ids)
-        chunks.append(chunk)
+    if fix_chunk_num is not None:
+        chunk_size = len(input_ids) // fix_chunk_num + 1 
+        for i in range(0, len(input_ids), chunk_size):
+            chunk_ids = input_ids[i:i + chunk_size]
+            chunk = tokenizer.decode(chunk_ids)
+            chunks.append(chunk)
+    else:
+        # print("chunk_size", chunk_size)
+        for i in range(0, len(input_ids), chunk_size):
+            chunk_ids = input_ids[i:i + chunk_size]
+            chunk = tokenizer.decode(chunk_ids)
+            chunks.append(chunk)
 
     response, history_messages, all_responses = await run_query_pipeline(api_root_url, model, temperature, chunks, query, task_type, max_rounds)
     sample["history_messages"] = history_messages
@@ -264,7 +271,7 @@ async def async_fill_in_response(api_root_url, sample, model, tokenizer, task_ty
         output_token_num += len(tokenizer.encode(response, add_special_tokens=False))
     sample["output_token_num"] = output_token_num
 
-async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3):
+async def async_fill_in_response_with_sem(semaphore, api_root_url, sample, model, tokenizer, task_type, temperature=0, chunk_size=5000, max_rounds=3, fix_chunk_num=None):
     async with semaphore:
-        await async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature, chunk_size, max_rounds)
+        await async_fill_in_response(api_root_url, sample, model, tokenizer, task_type, temperature, chunk_size, max_rounds, fix_chunk_num)
 
