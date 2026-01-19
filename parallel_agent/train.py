@@ -86,6 +86,7 @@ tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["mode
 
 
 parallel_config = {
+    "fix_chunk_num": None,
     "use_token_penalty": False,
     "token_penalty_L": 1024,
     "token_penalty_k": 0.0001,
@@ -94,13 +95,22 @@ parallel_config = {
 @agl.rollout
 async def solver_agent_parallel(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    fix_chunk_num = parallel_config['fix_chunk_num']
     try:
         model = llm.model
         api_root_url = llm.endpoint
         temperature = llm.sampling_parameters.get("temperature", 1.0)
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # print(task["task_type"], task.keys())
-        await parallel_async_fill_in_response(api_root_url, task, model, tokenizer, task["task_type"], temperature)
+        await parallel_async_fill_in_response(
+            api_root_url,
+            task,
+            model,
+            tokenizer,
+            task["task_type"],
+            temperature,
+            fix_chunk_num=fix_chunk_num,
+        )
     except Exception as e:
         print("Failure:", traceback.format_exc())
         task["response"] = ""
@@ -200,6 +210,7 @@ def main(
     use_token_penalty=False,
     token_penalty_L=1024,
     token_penalty_k=0.0001,
+    fix_chunk_num=None, # for parallel only
 ):
 
     # set name according to paras
@@ -210,6 +221,9 @@ def main(
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
+    if fix_chunk_num is not None:
+        experiment_name = experiment_name + f"fix_chunk_num_{fix_chunk_num}_"
+
 
     experiment_name = experiment_name.strip("_")
     verl_config["trainer"]["experiment_name"] = experiment_name
@@ -228,6 +242,7 @@ def main(
         parallel_config['use_token_penalty'] = use_token_penalty
         parallel_config['token_penalty_L'] = token_penalty_L
         parallel_config['token_penalty_k'] = token_penalty_k
+        parallel_config['fix_chunk_num'] = fix_chunk_num
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
