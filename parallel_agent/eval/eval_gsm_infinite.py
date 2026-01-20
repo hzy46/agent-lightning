@@ -13,6 +13,7 @@ import fire
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
+from algorithms.stream import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 from utils import score_func_gsm_infinite as score_func
 
 
@@ -66,6 +67,8 @@ def main(
             max_workers = 50
         elif method == "parallel":
             max_workers = 10
+        elif method == "stream":
+            max_workers = 10
         else:
             raise NotImplementedError
 
@@ -100,6 +103,11 @@ def main(
                 print(f"limit samples to {limit_n}")
 
             if method == "parallel":
+                if fix_chunk_num is None:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+                else:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_{}".format(method, fix_chunk_num, model_save_name))
+            elif method == "stream":
                 if fix_chunk_num is None:
                     model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
                 else:
@@ -162,6 +170,37 @@ def main(
                         await coro
 
                 asyncio.run(_run_memagent())
+            elif method == "stream":
+                async def _run_stream():
+                    semaphore = asyncio.Semaphore(max_workers)
+                    aio_tasks = [
+                        asyncio.create_task(
+                            stream_async_fill_in_response_with_sem(
+                                semaphore,
+                                StreamModelConfig(
+                                    api_root_url=api_root_url,
+                                    model=model,
+                                ),
+                                tokenizer,
+                                StreamAlgorithmConfig(
+                                    max_rounds=max_rounds, 
+                                    chunk_size=chunk_size, 
+                                    fix_chunk_num=fix_chunk_num,
+                                )
+                                sample,
+                                "gsm_infinite",
+                            )
+                        )
+                        for sample in samples
+                    ]
+
+                    for coro in tqdm(
+                        asyncio.as_completed(aio_tasks),
+                        total=len(aio_tasks),
+                    ):
+                        await coro
+
+                asyncio.run(_run_parallel())
             elif method == "parallel":
                 async def _run_parallel():
                     semaphore = asyncio.Semaphore(max_workers)
@@ -176,6 +215,7 @@ def main(
                                 "gsm_infinite",
                                 chunk_size=chunk_size,
                                 max_rounds=max_rounds,
+                                fix_chunk_num=fix_chunk_num,
                             )
                         )
                         for sample in samples
