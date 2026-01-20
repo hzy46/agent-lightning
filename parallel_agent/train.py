@@ -170,7 +170,7 @@ async def solver_agent_stream(task, llm) -> None:
         )
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # model_config, tokenizer, algorithm_config, sample, task_type)
-        print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
+        # print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
         await stream_async_fill_in_response(
             stream_model_config,
             tokenizer,
