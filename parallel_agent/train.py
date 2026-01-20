@@ -10,7 +10,7 @@ from eval.algorithms.parallel import async_fill_in_response as parallel_async_fi
 from eval.algorithms.normal import async_fill_in_response as normal_async_fill_in_response
 from eval.algorithms.memagent import async_fill_in_response as memagent_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
-from eval.algorithms.stream import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
+from eval.algorithms.stream import async_fill_in_response as stream_async_fill_in_response, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 
 import traceback
 import fire
