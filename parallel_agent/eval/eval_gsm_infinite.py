@@ -186,7 +186,7 @@ def main(
                                     max_rounds=max_rounds, 
                                     chunk_size=chunk_size, 
                                     fix_chunk_num=fix_chunk_num,
-                                )
+                                ),
                                 sample,
                                 "gsm_infinite",
                             )
