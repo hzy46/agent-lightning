@@ -39,6 +39,7 @@ def main(
     keep_origin=False,
     max_rounds=3,
     chunk_size=5000,
+    fix_chunk_num=None,
 ):
     base_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
     tokenizer = AutoTokenizer.from_pretrained(model)
@@ -99,7 +100,10 @@ def main(
                 print(f"limit samples to {limit_n}")
 
             if method == "parallel":
-                model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+                if fix_chunk_num is None:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+                else:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_{}".format(method, fix_chunk_num, model_save_name))
             elif method == 'memagent':
                 model_save_dir = os.path.join(save_root_dir,  "{}_chunk{}_{}".format(method, chunk_size, model_save_name))
             else:
