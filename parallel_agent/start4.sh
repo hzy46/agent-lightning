@@ -12,5 +12,5 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
 
 python train.py --method parallel --train_gsm_lengths "['16K']" --fix_chunk_num 2 \
     --use_token_penalty True \
-    --token_penalty_L 4096 \
+    --token_penalty_L 2048 \
     --token_penalty_k 0.0001
