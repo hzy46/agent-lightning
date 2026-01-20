@@ -10,6 +10,7 @@ from eval.algorithms.parallel import async_fill_in_response as parallel_async_fi
 from eval.algorithms.normal import async_fill_in_response as normal_async_fill_in_response
 from eval.algorithms.memagent import async_fill_in_response as memagent_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
+from eval.algorithms.stream import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 
 import traceback
 import fire
@@ -143,6 +144,72 @@ async def solver_agent_parallel(task, llm) -> None:
     agl.emit_reward(reward)
 
 
+
+
+stream_config = {
+    "use_token_penalty": False,
+    "token_penalty_L": 1024,
+    "token_penalty_k": 0.0001,
+    "algorithm": StreamAlgorithmConfig(
+        max_rounds=3,
+        chunk_size=5000, 
+        fix_chunk_num=None,
+    )
+}
+
+
+@agl.rollout
+async def solver_agent_stream(task, llm) -> None:
+    # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    temperature = llm.sampling_parameters.get("temperature", 1.0)
+    try:
+        stream_model_config = StreamModelConfig(
+            api_root_url=llm.endpoint,
+            model=llm.model,
+            temperature=temperature,
+        )
+        task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
+        # model_config, tokenizer, algorithm_config, sample, task_type)
+        print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
+        await stream_async_fill_in_response(
+            stream_model_config,
+            tokenizer,
+            stream_config['algorithm'],
+            task,
+            task["task_type"],
+        )
+    except Exception as e:
+        print("Failure:", traceback.format_exc())
+        task["response"] = ""
+
+    if task["task_type"] == "gsm_infinite":
+        reward = int(score_func_gsm_infinite(task["response"], task["solution"]))
+    elif task["task_type"] == "ruler":
+        reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
+    elif task["task_type"] == "memagent_train":
+        reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
+    else:
+        raise NotImplementedError
+
+    # during training
+    use_token_penalty = stream_config['use_token_penalty']
+    token_penalty_L = stream_config['token_penalty_L']
+    token_penalty_k = stream_config['token_penalty_k']
+    if temperature != 0 and use_token_penalty:
+        output_token_num = task["output_token_num"]
+        if output_token_num <= token_penalty_L:
+            cost = 0
+        else:
+            cost = 1 - math.exp(-token_penalty_k * (output_token_num - token_penalty_L))
+        # only apply on positive reward
+        if reward > 0:
+            print(f"reward: {reward}  output_token_num: {output_token_num} cost: {cost} reward - cost: {reward - cost}")
+            reward = reward - cost
+
+    # This reward will be tracked automatically
+    agl.emit_reward(reward)
+
+
 @agl.rollout
 async def solver_agent_normal(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
@@ -200,6 +267,7 @@ method_to_agent_func = {
     "normal": solver_agent_normal,
     "parallel": solver_agent_parallel,
     "memagent": solver_agent_memagent,
+    "stream": solver_agent_stream,
 }
 
 def main(
@@ -243,11 +311,17 @@ def main(
         parallel_config['token_penalty_L'] = token_penalty_L
         parallel_config['token_penalty_k'] = token_penalty_k
         parallel_config['fix_chunk_num'] = fix_chunk_num
+    elif method == "stream":
+        verl_config["data"]["max_prompt_length"] = 10240
+        verl_config["data"]["max_response_length"] = 1024
+        stream_config['use_token_penalty'] = use_token_penalty
+        stream_config['token_penalty_L'] = token_penalty_L
+        stream_config['token_penalty_k'] = token_penalty_k
+        stream_config['algorithm'].fix_chunk_num = fix_chunk_num
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
         assert use_token_penalty is False
-
 
     rng = random.Random(42)
     train_sample_list = []
