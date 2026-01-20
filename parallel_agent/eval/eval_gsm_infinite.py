@@ -200,7 +200,7 @@ def main(
                     ):
                         await coro
 
-                asyncio.run(_run_parallel())
+                asyncio.run(_run_stream())
             elif method == "parallel":
                 async def _run_parallel():
                     semaphore = asyncio.Semaphore(max_workers)
