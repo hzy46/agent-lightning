@@ -279,6 +279,7 @@ def main(
     token_penalty_L=1024,
     token_penalty_k=0.0001,
     fix_chunk_num=None, # for parallel only
+    agg_mode=False,
 ):
 
     # set name according to paras
@@ -291,6 +292,9 @@ def main(
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if fix_chunk_num is not None:
         experiment_name = experiment_name + f"fix_chunk_num_{fix_chunk_num}_"
+    if agg_mode:
+        assert method == "stream"
+        experiment_name = experiment_name + f"agg_"
 
 
     experiment_name = experiment_name.strip("_")
@@ -312,12 +316,24 @@ def main(
         parallel_config['token_penalty_k'] = token_penalty_k
         parallel_config['fix_chunk_num'] = fix_chunk_num
     elif method == "stream":
-        verl_config["data"]["max_prompt_length"] = 10240
-        verl_config["data"]["max_response_length"] = 1024
+        if agg_mode:
+            verl_config["data"]["max_prompt_length"] = 10240
+            verl_config["data"]["max_response_length"] = 1024
+            verl_config["agentlightning"] =  {
+                "trace_aggregator": {
+                    "level": "trajectory",
+                    "trajectory_max_prompt_length": 10240,
+                    "trajectory_max_response_length": 5120,
+                }
+            }
+        else:
+            verl_config["data"]["max_prompt_length"] = 10240
+            verl_config["data"]["max_response_length"] = 1024
         stream_config['use_token_penalty'] = use_token_penalty
         stream_config['token_penalty_L'] = token_penalty_L
         stream_config['token_penalty_k'] = token_penalty_k
         stream_config['algorithm'].fix_chunk_num = fix_chunk_num
+
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
         verl_config["data"]["max_response_length"] = 1024
