@@ -280,6 +280,7 @@ def main(
     token_penalty_k=0.0001,
     fix_chunk_num=None, # for parallel only
     agg_mode=False,
+    use_new_gen_data=False,
 ):
 
     # set name according to paras
@@ -295,6 +296,9 @@ def main(
     if agg_mode:
         assert method == "stream"
         experiment_name = experiment_name + f"agg_"
+    if use_new_gen_data:
+        experiment_name = experiment_name + f"data_new_gen_"
+
 
 
     experiment_name = experiment_name.strip("_")
@@ -356,8 +360,10 @@ def main(
                 "data": data
             })
 
-
-    gsm_train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
+    if use_new_gen_data:
+        gsm_train_dataset_dir = os.path.expanduser("~/new_gen_gsm_infinite_parsed")
+    else:
+        gsm_train_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_train")
     for gsm_length in train_gsm_lengths:
         file_path = os.path.join(gsm_train_dataset_dir, f"hard_{gsm_length}.json")
         with open(file_path) as f:
