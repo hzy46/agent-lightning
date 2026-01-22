@@ -57,7 +57,6 @@ def main(
     print("model_save_name", model_save_name)
 
 
-
     api_root_url = "http://localhost:8000/v1"
     
     if max_workers is None:

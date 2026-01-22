@@ -85,6 +85,23 @@ Your output format should be:
 """
 
 
+answer_prompt_template_ruler = """
+You are working on a long-text task. The full text has been split into {chunk_total} chunks, and {chunk_total} agents are collaborating to answer the following question.
+
+Query:
+{query}
+
+Agent Collaboration Stream:
+{stream_content}
+
+You need to extract all content enclosed in <answer></answer> from the agentic stream, synthesize them into a final answer, and output the result.
+
+Your output format should be:
+<answer>Therefore, the answer is (insert answer here).</answer>
+"""
+
+
+
 def extract_tag(text: str, tag: str) -> str | None:
     match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.S)
     return match.group(1).strip() if match else None
@@ -277,6 +294,8 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
 
     if task_type == "gsm_infinite":
         answer_prompt_template = answer_prompt_template_gsm_inifinite
+    elif task_type == "ruler":
+        answer_prompt_template = answer_prompt_template_ruler
     else:
         raise NotImplementedError
 

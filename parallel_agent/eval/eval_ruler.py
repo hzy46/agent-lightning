@@ -7,52 +7,14 @@ from tqdm import tqdm
 import subprocess
 import time
 import numpy as np
-from methods import normal_get_pred_for_sample, memagent_async_get_pred_for_sample
-from parallel_methods import parallel_async_get_pred_for_sample
 from transformers import AutoTokenizer
 import asyncio
 import fire
 from utils import score_func
-
-async def sem_memagent_call_memagent(
-    semaphore,
-    api_root_url,
-    sample,
-    model,
-    tokenizer,
-    temperature,
-    top_p,
-):
-    async with semaphore:
-        return await memagent_async_get_pred_for_sample(
-            api_root_url,
-            sample,
-            model,
-            tokenizer,
-            temperature,
-            top_p,
-        )
-
-
-async def sem_memagent_call_parallel(
-    semaphore,
-    api_root_url,
-    sample,
-    model,
-    tokenizer,
-    temperature,
-    top_p,
-):
-    async with semaphore:
-        return await parallel_async_get_pred_for_sample(
-            api_root_url,
-            sample,
-            model,
-            tokenizer,
-            temperature,
-            top_p,
-        )
-
+from algorithms.normal import fill_in_response as normal_fill_in_response
+from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
+from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
+from algorithms.stream import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 
 def main(
     model="Qwen/Qwen2.5-7B-Instruct-1M",
@@ -79,6 +41,10 @@ def main(
     save_root_dir="results/",
     limit_n=None,
     max_workers=None,
+    keep_origin=False,
+    max_rounds=3,
+    chunk_size=5000,
+    fix_chunk_num=None,
 ):
     base_dir = os.path.expanduser("~/ruler_from_memagent")
     context_length_str_to_num = {
@@ -92,12 +58,17 @@ def main(
     }
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    if os.path.exists(model):
+    if "global_step_" in model:
+        model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
+        model = model.strip("/").split("/")[-1] 
+    elif os.path.exists(model):
         # it is a path
-        model = model.split("/")[-1]
+        model = model.strip("/").split("/")[-1]
+        model_save_name = model.lower()
+    else:
+        model_save_name = model.split("/")[-1].lower()
+    print("model_save_name", model_save_name)
 
-    temperature = 0
-    top_p = 1
     api_root_url = "http://localhost:8000/v1"
     
     if max_workers is None:
@@ -106,7 +77,11 @@ def main(
         elif method == "memagent":
             max_workers = 50
         elif method == "parallel":
-            max_workers = 5
+            max_workers = 10
+        elif method == "stream":
+            max_workers = 10
+        else:
+            raise NotImplementedError
 
     while True:
         print("try to conntect...")
@@ -134,7 +109,20 @@ def main(
                 samples = samples[:limit_n]
                 print(f"limit samples to {limit_n}")
             
-            model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model.split("/")[-1].lower()))
+            if method == "parallel":
+                if fix_chunk_num is None:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+                else:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_{}".format(method, fix_chunk_num, model_save_name))
+            elif method == "stream":
+                if fix_chunk_num is None:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
+                else:
+                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_{}".format(method, fix_chunk_num, model_save_name))
+            elif method == 'memagent':
+                model_save_dir = os.path.join(save_root_dir,  "{}_chunk{}_{}".format(method, chunk_size, model_save_name))
+            else:
+                model_save_dir = os.path.join(save_root_dir,  "{}_{}".format(method, model_save_name))
             result_save_path = os.path.join(model_save_dir, "result_{}_{}.json".format(task, context_length_str))
             if os.path.exists(model_save_dir) is False:
                 os.makedirs(model_save_dir)
@@ -149,18 +137,17 @@ def main(
                     # clear
                     with open(result_save_path, "w") as f:
                         pass
-            
+
             start_time = time.time()
             if method == "normal":
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     futures = [
                         executor.submit(
-                            normal_get_pred_for_sample,
+                            normal_fill_in_response,
                             api_root_url,
                             model,
                             sample,
-                            temperature,
-                            top_p,
+                            "ruler"
                         )
                         for sample in samples
                     ]
@@ -172,14 +159,14 @@ def main(
                     semaphore = asyncio.Semaphore(max_workers)
                     aio_tasks = [
                         asyncio.create_task(
-                            sem_memagent_call_memagent(
+                            memagent_async_fill_in_response_with_sem(
                                 semaphore,
                                 api_root_url,
                                 sample,
                                 model,
                                 tokenizer,
-                                temperature,
-                                top_p,
+                                "ruler",
+                                chunk_size=chunk_size,
                             )
                         )
                         for sample in samples
@@ -192,20 +179,52 @@ def main(
                         await coro
 
                 asyncio.run(_run_memagent())
-            elif method == "parallel":
-                async def _run_parallel():
-                    # use a small parallism for parallel agent
+            elif method == "stream":
+                async def _run_stream():
                     semaphore = asyncio.Semaphore(max_workers)
                     aio_tasks = [
                         asyncio.create_task(
-                            sem_memagent_call_parallel(
+                            stream_async_fill_in_response_with_sem(
+                                semaphore,
+                                StreamModelConfig(
+                                    api_root_url=api_root_url,
+                                    model=model,
+                                ),
+                                tokenizer,
+                                StreamAlgorithmConfig(
+                                    max_rounds=max_rounds, 
+                                    chunk_size=chunk_size, 
+                                    fix_chunk_num=fix_chunk_num,
+                                ),
+                                sample,
+                                "ruler",
+                            )
+                        )
+                        for sample in samples
+                    ]
+
+                    for coro in tqdm(
+                        asyncio.as_completed(aio_tasks),
+                        total=len(aio_tasks),
+                    ):
+                        await coro
+
+                asyncio.run(_run_stream())
+            elif method == "parallel":
+                async def _run_parallel():
+                    semaphore = asyncio.Semaphore(max_workers)
+                    aio_tasks = [
+                        asyncio.create_task(
+                            parallel_async_fill_in_response_with_sem(
                                 semaphore,
                                 api_root_url,
                                 sample,
                                 model,
                                 tokenizer,
-                                temperature,
-                                top_p,
+                                "ruler",
+                                chunk_size=chunk_size,
+                                max_rounds=max_rounds,
+                                fix_chunk_num=fix_chunk_num,
                             )
                         )
                         for sample in samples
@@ -231,9 +250,10 @@ def main(
             print(f"task: {task} length: {context_length_str} sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
             
             with open(result_save_path, "w") as f:
-                for sample in samples:
-                    del sample["context"]
-                    del sample["input"]
+                if keep_origin is False:
+                    for sample in samples:
+                        del sample["context"]
+                        del sample["input"]
                 json.dump(samples, f)
 
 
