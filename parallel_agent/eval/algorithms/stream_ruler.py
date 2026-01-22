@@ -345,7 +345,7 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
     if answer is None:
         answer = ""
 
-    return answer, stream_content, log_dict["all_responses"], log_dict["all_requests"]
+    return answer, stream_answer, log_dict["all_responses"], log_dict["all_requests"]
 
 
 
