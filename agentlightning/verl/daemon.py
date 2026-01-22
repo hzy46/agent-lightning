@@ -852,6 +852,51 @@ class AgentModeDaemon:
             })
 
 
+
+       # collect kv_retrieval samples and report the result
+        kv_ret_list = []
+        for rollout_id, rollout in self._completed_rollouts_v0.items():
+            final_reward = rollout.final_reward
+            if final_reward is None:
+                continue
+            if not rollout.triplets:
+                continue
+            original_sample = self._task_id_to_original_sample[rollout_id]['data']
+            if original_sample.get("task_type", "") == "kv_retrieval":
+                response_length_list = [len(triplet.response.get("token_ids", [])) for triplet in rollout.triplets]
+                kv_ret_list.append({
+                    "mean_hop_num_str": "{:.2f}".format(original_sample["mean_hop_num"]),
+                    "length_str": original_sample["length_str"],
+                    "answer_num": original_sample["answer_num"],
+                    "request_count": len(rollout.triplets),
+                    "reward": final_reward,
+                    "sum_response_length": np.sum(response_length_list),
+                })
+
+        if len(kv_ret_list) > 0:
+            ret_df = pd.DataFrame(kv_ret_list)
+            mean_hop_num_strs = ret_df.mean_hop_num_str.drop_duplicates().tolist()
+            length_strs = ret_df.length_str.drop_duplicates().tolist()
+            answer_nums = ret_df.answer_num.drop_duplicates().tolist()
+            for mean_hop_num_str in mean_hop_num_strs:
+                for length_str in length_strs:
+                    for answer_num in answer_nums:
+                        sub_df = ret_df[(ret_df.mean_hop_num_str == mean_hop_num_str) & (ret_df.length_str == length_str) & (ret_df.answer_num == answer_num)]
+                        if len(sub_df) > 0:
+                            metric_dict.update({
+                                f"val/kv_retrieval/mean_hop_num={mean_hop_num_str}_length={length_str}_answer_num={answer_num}/reward": float(sub_df.reward.mean()),
+                                f"val/kv_retrieval/mean_hop_num={mean_hop_num_str}_length={length_str}_answer_num={answer_num}/request_count": float(sub_df.request_count.mean()),
+                                f"val/kv_retrieval/mean_hop_num={mean_hop_num_str}_length={length_str}_answer_num={answer_num}/sum_response_length": float(sub_df.sum_response_length.mean()),
+                            })
+
+            # overall
+            metric_dict.update({
+                f"val/kv_retrieval/overall/reward": float(ret_df.reward.mean()),
+                f"val/kv_retrieval/overall/request_count": float(ret_df.request_count.mean()),
+                f"val/kv_retrieval/overall/sum_response_length": float(ret_df.sum_response_length.mean()),
+            })
+
+
         for rollout_id, rollout in self._completed_rollouts_v0.items():
             final_reward_raw: Optional[float] = rollout.final_reward
             final_reward = self._fillna_reward(rollout)

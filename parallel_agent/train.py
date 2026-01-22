@@ -84,7 +84,9 @@ verl_config = {
     },
 }
 
-tokenizer = AutoTokenizer.from_pretrained(verl_config["actor_rollout_ref"]["model"]["path"])
+tokenizer_info = {
+    "tokenizer": None
+}
 
 
 parallel_config = {
@@ -98,6 +100,8 @@ parallel_config = {
 async def solver_agent_parallel(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
     fix_chunk_num = parallel_config['fix_chunk_num']
+    tokenizer =  tokenizer_info["tokenizer"]
+
     try:
         model = llm.model
         api_root_url = llm.endpoint
@@ -162,6 +166,7 @@ stream_config = {
 @agl.rollout
 async def solver_agent_stream(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    tokenizer =  tokenizer_info["tokenizer"]
     temperature = llm.sampling_parameters.get("temperature", 1.0)
     try:
         stream_model_config = StreamModelConfig(
@@ -242,6 +247,7 @@ async def solver_agent_normal(task, llm) -> None:
 @agl.rollout
 async def solver_agent_memagent(task, llm) -> None:
     # Query LLM endpoint. All queries will be automatically tracked by LLM proxy
+    tokenizer =  tokenizer_info["tokenizer"]
     try:
         model = llm.model
         api_root_url = llm.endpoint
@@ -297,6 +303,7 @@ def main(
         raise NotImplementedError
     verl_config["actor_rollout_ref"]["model"]["path"] = from_model
 
+    tokenizer_info["tokenizer"] = AutoTokenizer.from_pretrained(from_model)
 
     if len(train_doc_nums) > 0:
         experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
