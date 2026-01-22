@@ -10,4 +10,4 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
     # NCCL_P2P_DISABLE=1 \
     # NCCL_CUMEM_HOST_ENABLE=0 \
 
-python train.py --method stream --train_gsm_lengths "['16K']" --fix_chunk_num 2 --use_new_gen_data True
+python train.py --method stream --train_gsm_lengths "['16K']" --fix_chunk_num 2 --use_new_gen_data True --agg_mode True
