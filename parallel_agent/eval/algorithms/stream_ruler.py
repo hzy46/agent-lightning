@@ -15,20 +15,6 @@ Due to length limitations, we cannot process the entire context at once. However
 
 You are currently processing chunk {chunk_index} out of a total of {chunk_total} chunks.
 
-You may output in one of the following formats:
-
-1. <thinking>...</thinking>
-Use this when you do not find any information related to the query in this chunk, but you are willing to wait for new information broadcast by other agents.
-
-2. <thinking>...</thinking> <broadcast>...</broadcast>
-Use this when you find information in this chunk that is related to the query but does not directly answer it. In this case, you choose to broadcast this information to other agents.
-
-3. <thinking>...</thinking> <answer>...</answer>
-Use this when you find information in this chunk that is directly relevant to the answer. You choose to answer the query and end the current stream. The content inside <answer></answer> will also be broadcast to other agents.
-
-Note: There may be more than one piece of information related to the query. Try to find as many as possible and make full use of the broadcast mechanism to handle multi-hop reasoning. Broadcasted information should be as concise and accurate as possible. Try not to answer too early.
-
-
 ## Query Starts
 
 {query}
@@ -47,10 +33,18 @@ Note: There may be more than one piece of information related to the query. Try 
 
 ## Query Ends
 
-Output in one of the following three formats:
-1. <thinking>...</thinking> 
-2. <thinking>...</thinking> <broadcast>...</broadcast> 
+You may output in one of the following formats:
+
+1. <thinking>...</thinking>
+Use this when you do not find any information related to the query in this chunk, but you are willing to wait for new information broadcast by other agents.
+
+2. <thinking>...</thinking> <broadcast>...</broadcast>
+Use this when you find information in this chunk that is related to the query but does not directly answer it. In this case, you choose to broadcast this information to other agents.
+
 3. <thinking>...</thinking> <answer>...</answer>
+Use this when you find information in this chunk that is directly relevant to the answer. You choose to answer the query and end the current stream. The content inside <answer></answer> will also be broadcast to other agents.
+
+Note: There may be more than one piece of information related to the query. Try to find as many as possible and make full use of the broadcast mechanism to handle multi-hop reasoning. Broadcasted information should be as concise and accurate as possible. Try not to answer too early.
 """
 
 
