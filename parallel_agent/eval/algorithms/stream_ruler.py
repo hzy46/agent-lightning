@@ -15,12 +15,18 @@ Due to length limitations, we cannot process the entire context at once. However
 
 You are currently processing chunk {chunk_index} out of a total of {chunk_total} chunks.
 
-Chunk content:
+## Chunk Content Starts
+
 {chunk_text}
 
-The current long-text question is:
+## Chunk Content Ends
+
+
+## Query Starts
 
 {query}
+
+## Query Ends
 
 You may output in one of the following formats:
 
