@@ -36,6 +36,7 @@ You are currently processing chunk {chunk_index} out of a total of {chunk_total}
 Instructions:
  - Read your chunk and broadcast the most useful information you can for answering the query.
  - Do NOT provide the full chunk content. Keep your report concise and only include relevant information.
+ - The query refers to the overall context. Sometimes it cannot be answered using only the current chunk. In such cases, you should broadcast this situation as well, indicating that the answer requires information from other chunks.
 
 You may output in one of the following formats:
 
