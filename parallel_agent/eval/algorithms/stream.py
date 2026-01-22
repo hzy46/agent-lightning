@@ -2,7 +2,7 @@ import asyncio
 import re
 import random
 import aiohttp
-
+import copy
 
 async def get_async_client():
     return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
@@ -240,13 +240,18 @@ async def call_llm(model_config, messages, log_dict) -> str:
             data = await resp.json()
             response = data['choices'][0]['message']['content']
             log_dict["all_responses"].append(response)
+            log_dict["all_requests"].append({
+                "prompt": copy.deepcopy(messages),
+                "response": response,
+            })
             return response
 
 
 
 async def run_query_pipeline(model_config, algorithm_config, chunks, query, task_type) :
     log_dict = {
-        "all_responses": []
+        "all_responses": [],
+        "all_requests": [],
     }
     streams = [
         Stream(context=chunk, query=query, chunk_index=chunk_i + 1, chunk_total=len(chunks))
@@ -312,7 +317,7 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
     if answer is None:
         answer = ""
 
-    return answer, stream_content, log_dict["all_responses"]
+    return answer, stream_content, log_dict["all_responses"], log_dict["all_requests"]
 
 
 
@@ -341,9 +346,10 @@ async def async_fill_in_response(model_config, tokenizer, algorithm_config, samp
         chunk = tokenizer.decode(chunk_ids)
         chunks.append(chunk)
 
-    response, history_messages, all_responses = await run_query_pipeline(model_config, algorithm_config, chunks, query, task_type)
+    response, history_messages, all_responses, all_requests = await run_query_pipeline(model_config, algorithm_config, chunks, query, task_type)
     sample["history_messages"] = history_messages
     sample["response"] = response
+    sample["all_requests"] = all_requests
 
     # for token penalty, this may affect timing
     output_token_num = 0
