@@ -307,13 +307,23 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         if is_end:
             break
 
-    stream_content_list = []
+    # stream_content_list = []
+    # for stream in streams:
+    #     stream_content_list.append("Chunk {}\nLog:{}\n".format(
+    #         stream.chunk_index,
+    #         stream.format_content()
+    #     ))
+    # stream_content = "\n\n".join(stream_content_list)
+
+    stream_answer_list = []
     for stream in streams:
-        stream_content_list.append("Chunk {}\nLog:{}\n".format(
+        stream_answer_list.append("Chunk {}\nAnswer: {}\n".format(
             stream.chunk_index,
-            stream.format_content()
+            stream.answer if stream.answer else "N/A"
         ))
-    stream_content = "\n\n".join(stream_content_list)
+    stream_answer = "\n\n".join(stream_answer_list)
+
+
 
     if task_type == "gsm_infinite":
         answer_prompt_template = answer_prompt_template_gsm_inifinite
@@ -326,7 +336,7 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         model_config,
         [{"role": "user", "content": answer_prompt_template.format(
             chunk_total=len(chunks),
-            stream_content=stream_content,
+            stream_content=stream_answer,
             query=query
         )}],
         log_dict,
