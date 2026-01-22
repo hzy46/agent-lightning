@@ -156,10 +156,10 @@ class Stream(object):
         self.received_answer_information = ""
 
     async def run(self, model_config, log_dict):
-        self.broadcast = ""
-        self.answer = ""
         if self.is_finished:
             return
+        self.broadcast = ""
+        self.answer = ""
         if len(self.messages) == 0:
             self.messages.append({
                 "role": "user",
@@ -322,8 +322,6 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
             stream.answer if stream.answer else "N/A"
         ))
     stream_answer = "\n\n".join(stream_answer_list)
-
-
 
     if task_type == "gsm_infinite":
         answer_prompt_template = answer_prompt_template_gsm_inifinite
