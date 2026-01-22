@@ -10,6 +10,7 @@ from eval.algorithms.parallel import async_fill_in_response as parallel_async_fi
 from eval.algorithms.normal import async_fill_in_response as normal_async_fill_in_response
 from eval.algorithms.memagent import async_fill_in_response as memagent_async_fill_in_response
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
+from eval.utils import score_func_kv_retrieval
 from eval.algorithms.stream import async_fill_in_response as stream_async_fill_in_response, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 
 import traceback
@@ -64,7 +65,7 @@ verl_config = {
         "model": {
             # "path": os.path.expanduser("~/Qwen2.5-7B-Instruct-Yarn"),
             # "path": os.path.expanduser("Qwen/Qwen2.5-7B-Instruct"),
-            "path": os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
+            "path": "placeholder",
             "use_remove_padding": True,
             "enable_gradient_checkpointing": True,
         },
@@ -230,6 +231,8 @@ async def solver_agent_normal(task, llm) -> None:
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     elif task["task_type"] == "memagent_train":
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
+    elif task["task_type"] == "kv_retrieval":
+        reward = score_func_kv_retrieval(task["response"], task["answers"])
     else:
         raise NotImplementedError
 
@@ -273,6 +276,8 @@ method_to_agent_func = {
 def main(
     train_doc_nums=[],
     train_gsm_lengths=["8K", "16K"],
+    train_kv_lengths=[], # "8K", "16K"
+    from_model=os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
     method="parallel",
     eval_ruler=False,
     use_token_penalty=False,
@@ -284,11 +289,21 @@ def main(
 ):
 
     # set name according to paras
-    experiment_name = f"train_from_gsm_8k_step500_qwen2.5-7b_{method}_"
+    if "train_qwen2.5-7b_normal_gsm_8K/global_step_500" in from_model:
+        experiment_name = f"train_from_gsm_8k_step500_qwen2.5-7b_{method}_"
+    elif "qwen/qwen2.5-7b-instruct" == from_model.lower():
+        experiment_name = f"train_qwen2.5-7b_{method}_"
+    else:
+        raise NotImplementedError
+    verl_config["actor_rollout_ref"]["model"]["path"] = from_model
+
+
     if len(train_doc_nums) > 0:
         experiment_name += "docs_" + "-".join([str(doc_num) for doc_num in train_doc_nums]) + "_"
     if len(train_gsm_lengths) > 0:
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
+    if len(train_kv_lengths) > 0:
+        experiment_name += "kv_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if fix_chunk_num is not None:
@@ -373,34 +388,58 @@ def main(
                 "data": data
             })
 
+    kv_train_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
+    for kv_length in train_kv_lengths:
+        file_path = os.path.join(kv_train_dataset_dir, f"train_hop-1-8_ans-1-4_{kv_length}.json")
+        with open(file_path) as f:
+            data_list = json.load(f)
+        for data in data_list:
+            train_sample_list.append({
+                "data": data
+            }) 
+
+
     rng.shuffle(train_sample_list)
 
     # prepare_test
     test_sample_list = []
     # gsm_infinite
-    gsm_test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
-    for file_name in [
-        # "hard_8K.json", 
-        "hard_16K.json", 
-        # "hard_32K.json"
-    ]:
-        file_path = os.path.join(gsm_test_dataset_dir, file_name)
-        with open(file_path) as f:
-            data_list = json.load(f)
-        for data in data_list:
-            test_sample_list.append({
-                "data": data  # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
-            })
-    # ruler
-    if eval_ruler:
-        ruler_test_file_path = os.path.expanduser("~/ruler_mini.json")
-        with open(ruler_test_file_path) as f:
-            data_list = json.load(f)
-        for data in data_list:
-            test_sample_list.append({
-                "data": data
-            })
 
+    if len(train_gsm_lengths) > 0:
+        gsm_test_dataset_dir = os.path.expanduser("~/gsm_infinite_parsed_eval")
+        for file_name in [
+            # "hard_8K.json", 
+            "hard_16K.json", 
+            # "hard_32K.json"
+        ]:
+            file_path = os.path.join(gsm_test_dataset_dir, file_name)
+            with open(file_path) as f:
+                data_list = json.load(f)
+            for data in data_list:
+                test_sample_list.append({
+                    "data": data  # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
+                })
+        # ruler
+        if eval_ruler:
+            ruler_test_file_path = os.path.expanduser("~/ruler_mini.json")
+            with open(ruler_test_file_path) as f:
+                data_list = json.load(f)
+            for data in data_list:
+                test_sample_list.append({
+                    "data": data
+                })
+    elif len(train_kv_lengths) > 0:
+        kv_test_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
+        for kv_length in ["8K"]:
+            file_path = os.path.join(kv_test_dataset_dir, f"test_hop-1-8_ans-1-4_{kv_length}.json")
+            with open(file_path) as f:
+                data_list = json.load(f)
+            for data in data_list:
+                test_sample_list.append({
+                    "data": data
+                })
+    else:
+        raise NotImplementedError
     rng.shuffle(test_sample_list)
 
     algorithm = agl.VERL(verl_config)

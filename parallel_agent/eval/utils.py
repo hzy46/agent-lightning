@@ -185,3 +185,14 @@ def score_func_gsm_infinite(response, solution):
         except: 
             return 0
         return int(answergenerated_text == answer_text)
+
+
+def score_func_kv_retrieval(response, answers):
+    response = response.strip()
+    response = response.replace(" ", "")
+    response = response.replace("<answer>", "")
+    response = response.replace("</answer>", "")
+    response = response.strip()
+    response_list = response.split(",")
+    response_list = [res.strip() for res in response_list if res.strip()]
+    return len(set(response_list).intersection(set(answers))) / len(set(response_list).union(set(answers)))

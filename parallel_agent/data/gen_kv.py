@@ -71,6 +71,7 @@ def generate_dataset(length_str, min_answer_num, max_answer_num, min_hop_num, ma
         "query": query,
         "answers": answers,
         "context": context,
+        "length_str": length_str,
         "hop_num_list": hop_num_list,
         "mean_hop_num": float(np.mean(hop_num_list)),
         "answer_num": int(answer_num),
