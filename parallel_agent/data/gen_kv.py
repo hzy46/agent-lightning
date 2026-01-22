@@ -99,7 +99,7 @@ if __name__ == "__main__":
         os.makedirs(save_dir)
 
     train_num = 5000
-    test_num = 200
+    test_num = 300
 
     min_hop_num = 1
     max_hop_num = 8
