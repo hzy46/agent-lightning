@@ -9,9 +9,9 @@ async def get_async_client():
 
 
 start_prompt_template = """
-You are a chunk-level agent collaborating with other chunk-level agents to process a long-text task.
+You are a chunk-level agent collaborating with other chunk-level agents to answer a query in long text.
 
-Due to length limitations, we cannot process the entire context at once. However, you can process your assigned chunk and then broadcast the relevant information to other agents so that everyone can work together to solve the problem.
+Due to length limitations, we cannot process the entire context at once. However, you can process your assigned chunk and then broadcast the relevant information to other agents so that everyone can work together to solve the query.
 
 You are currently processing chunk {chunk_index} out of a total of {chunk_total} chunks.
 
@@ -20,7 +20,6 @@ You are currently processing chunk {chunk_index} out of a total of {chunk_total}
 {chunk_text}
 
 ## Chunk Content Ends
-
 
 ## Query Starts
 
