@@ -114,6 +114,8 @@ You need to extract all content enclosed in <answer></answer> from the agentic s
 
 Your output format should be:
 <answer>Therefore, the answer is (insert answer here).</answer>
+
+You MUST follow the format <answer>Therefore, the answer is (insert answer here).</answer> without adding anything else.
 """
 
 
