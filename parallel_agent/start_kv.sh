@@ -21,4 +21,5 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
 python train.py --method stream --train_gsm_lengths "[]" \
     --fix_chunk_num 2 \
     --train_kv_lengths "['16K']" \
-    --from_model ~/models/train_qwen2.5-7b_normal_kv_8K/global_step_400
+    --from_model ~/models/train_qwen2.5-7b_normal_kv_8K/global_step_400 \
+    --agg_mode True
