@@ -381,6 +381,9 @@ async def async_fill_in_response(model_config, tokenizer, algorithm_config, samp
     elif task_type == "memagent_train":
         context = sample["context"].strip()
         query = sample['input'].strip()
+    elif task_type == "kv_retrieval":
+        context = sample["context"].strip()
+        query = sample['query'].strip()
     else:
         raise NotImplementedError
 
