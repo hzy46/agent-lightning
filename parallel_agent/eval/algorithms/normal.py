@@ -11,7 +11,9 @@ $DOC$
 
 $Q$
 
-Format your response as follows: "Therefore, the answer is (insert answer here)"."""
+Format your response as follows: "Therefore, the answer is (insert answer here)".
+You MUST follow the format "Therefore, the answer is (insert answer here)." without adding anything else.
+"""
 
 
 
