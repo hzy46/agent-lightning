@@ -12,6 +12,7 @@ from eval.algorithms.memagent import async_fill_in_response as memagent_async_fi
 from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 from eval.utils import score_func_kv_retrieval
 from eval.algorithms.stream import async_fill_in_response as stream_async_fill_in_response, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
+from eval.algorithms.stream_retrieval import async_fill_in_response as stream_retrieval_async_fill_in_response
 
 import traceback
 import fire
@@ -177,13 +178,22 @@ async def solver_agent_stream(task, llm) -> None:
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # model_config, tokenizer, algorithm_config, sample, task_type)
         # print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
-        await stream_async_fill_in_response(
-            stream_model_config,
-            tokenizer,
-            stream_config['algorithm'],
-            task,
-            task["task_type"],
-        )
+        if task["task_type"] == "ruler" or task_type["task_type"] == "kv_retrieval":
+            await stream_retrieval_async_fill_in_response(
+                stream_model_config,
+                tokenizer,
+                stream_config['algorithm'],
+                task,
+                task["task_type"],
+            )
+        elif task["task_type"] == "gsm_infinite":
+            await stream_async_fill_in_response(
+                stream_model_config,
+                tokenizer,
+                stream_config['algorithm'],
+                task,
+                task["task_type"],
+            )
     except Exception as e:
         print("Failure:", traceback.format_exc())
         task["response"] = ""
@@ -194,6 +204,8 @@ async def solver_agent_stream(task, llm) -> None:
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     elif task["task_type"] == "memagent_train":
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
+    elif task_type == "kv_retrieval":
+        reward = score_func_kv_retrieval(task["response"], task["answers"])
     else:
         raise NotImplementedError
 
@@ -214,6 +226,7 @@ async def solver_agent_stream(task, llm) -> None:
 
     # This reward will be tracked automatically
     agl.emit_reward(reward)
+
 
 
 @agl.rollout
@@ -299,6 +312,8 @@ def main(
         experiment_name = f"train_from_gsm_8k_step500_qwen2.5-7b_{method}_"
     elif "qwen/qwen2.5-7b-instruct" == from_model.lower():
         experiment_name = f"train_qwen2.5-7b_{method}_"
+    elif "train_qwen2.5-7b_normal_kv_8K/global_step_400" in from_model:
+        experiment_name = f"train_from_kv_8k_step400_qwen2.5-7b_{method}_"
     else:
         raise NotImplementedError
     verl_config["actor_rollout_ref"]["model"]["path"] = from_model
@@ -437,7 +452,11 @@ def main(
                 })
     elif len(train_kv_lengths) > 0:
         kv_test_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
-        for kv_length in ["8K"]:
+        if method == "normal":
+            kv_lengths = ["8K"]
+        else:
+            kv_lengths = ["16K"]
+        for kv_length in kv_lengths:
             file_path = os.path.join(kv_test_dataset_dir, f"test_hop-1-8_ans-1-4_{kv_length}.json")
             with open(file_path) as f:
                 data_list = json.load(f)

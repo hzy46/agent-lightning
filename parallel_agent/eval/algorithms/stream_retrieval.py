@@ -121,6 +121,27 @@ You MUST follow the format <answer>Therefore, the answer is (insert answer here)
 
 
 
+
+answer_prompt_template_kv_retrieval = """
+You are working on a long-text task. The full text has been split into {chunk_total} chunks, and {chunk_total} agents are collaborating to answer the following question.
+
+Query:
+{query}
+
+Agent Collaboration Stream:
+{stream_content}
+
+You need to extract all content enclosed in <answer></answer> from the agentic stream, synthesize them into a final answer, and output the result.
+
+Your output format should be <answer>final_value_1, ..., final_value_n</answer>.
+
+If there is only one final value, output <answer>final_value_1</answer>
+
+You MUST follow the format <answer>final_value_1, ..., final_value_n</answer> or <answer>final_value_1</answer> without adding anything else.
+"""
+
+
+
 def extract_tag(text: str, tag: str) -> str | None:
     match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.S)
     return match.group(1).strip() if match else None
@@ -328,6 +349,8 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         answer_prompt_template = answer_prompt_template_gsm_inifinite
     elif task_type == "ruler":
         answer_prompt_template = answer_prompt_template_ruler
+    elif task_type == "kv_retrieval":
+        answer_prompt_template = answer_prompt_template_kv_retrieval
     else:
         raise NotImplementedError
 

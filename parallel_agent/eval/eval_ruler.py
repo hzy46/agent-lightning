@@ -14,7 +14,7 @@ from utils import score_func
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
-from algorithms.stream_ruler import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
+from algorithms.stream_retrieval import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 
 def main(
     model="Qwen/Qwen2.5-7B-Instruct-1M",
