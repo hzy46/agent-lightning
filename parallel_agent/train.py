@@ -178,7 +178,7 @@ async def solver_agent_stream(task, llm) -> None:
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # model_config, tokenizer, algorithm_config, sample, task_type)
         # print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
-        if task["task_type"] == "ruler" or task_type["task_type"] == "kv_retrieval":
+        if task["task_type"] == "ruler" or task["task_type"] == "kv_retrieval":
             await stream_retrieval_async_fill_in_response(
                 stream_model_config,
                 tokenizer,
@@ -204,7 +204,7 @@ async def solver_agent_stream(task, llm) -> None:
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     elif task["task_type"] == "memagent_train":
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
-    elif task_type == "kv_retrieval":
+    elif task["task_type"]  == "kv_retrieval":
         reward = score_func_kv_retrieval(task["response"], task["answers"])
     else:
         raise NotImplementedError
