@@ -102,12 +102,12 @@ if __name__ == "__main__":
     test_num = 300
 
     min_hop_num = 1
-    max_hop_num = 3
+    max_hop_num = 2
 
     for length_str in ["8K", "16K"]:
         # 原来的 answer_num -> 改成范围
         min_answer_num = 1
-        max_answer_num = 3
+        max_answer_num = 2
 
         train_save_path = os.path.join(
             save_dir,
