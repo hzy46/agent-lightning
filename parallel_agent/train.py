@@ -325,7 +325,7 @@ def main(
     if len(train_gsm_lengths) > 0:
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     if len(train_kv_lengths) > 0:
-        experiment_name += "kv_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
+        experiment_name += "kv_v2_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if fix_chunk_num is not None:
@@ -412,7 +412,7 @@ def main(
 
     kv_train_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
     for kv_length in train_kv_lengths:
-        file_path = os.path.join(kv_train_dataset_dir, f"train_hop-1-8_ans-1-4_{kv_length}.json")
+        file_path = os.path.join(kv_train_dataset_dir, f"train_{kv_length}.json")
         with open(file_path) as f:
             data_list = json.load(f)
         for data in data_list:
@@ -457,7 +457,7 @@ def main(
         else:
             kv_lengths = ["16K"]
         for kv_length in kv_lengths:
-            file_path = os.path.join(kv_test_dataset_dir, f"test_hop-1-8_ans-1-4_{kv_length}.json")
+            file_path = os.path.join(kv_test_dataset_dir, f"test_{kv_length}.json")
             with open(file_path) as f:
                 data_list = json.load(f)
             for data in data_list:
