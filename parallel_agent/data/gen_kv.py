@@ -94,7 +94,7 @@ def build_data_list(num_samples, length_str, min_answer_num, max_answer_num, min
 
 # 示例
 if __name__ == "__main__":
-    save_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
+    save_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
     if os.path.exists(save_dir) is False:
         os.makedirs(save_dir)
 
@@ -102,20 +102,20 @@ if __name__ == "__main__":
     test_num = 300
 
     min_hop_num = 1
-    max_hop_num = 8
+    max_hop_num = 3
 
     for length_str in ["8K", "16K"]:
         # 原来的 answer_num -> 改成范围
         min_answer_num = 1
-        max_answer_num = 4
+        max_answer_num = 3
 
         train_save_path = os.path.join(
             save_dir,
-            f"train_hop-{min_hop_num}-{max_hop_num}_ans-{min_answer_num}-{max_answer_num}_{length_str}.json"
+            f"train_{length_str}.json"
         )
         test_save_path = os.path.join(
             save_dir,
-            f"test_hop-{min_hop_num}-{max_hop_num}_ans-{min_answer_num}-{max_answer_num}_{length_str}.json"
+            f"test_{length_str}.json"
         )
 
         train_data_list = build_data_list(
