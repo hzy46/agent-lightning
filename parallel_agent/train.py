@@ -455,7 +455,7 @@ def main(
         if method == "normal":
             kv_lengths = ["8K"]
         else:
-            kv_lengths = ["16K"]
+            kv_lengths = ["8K", "16K"]
         for kv_length in kv_lengths:
             file_path = os.path.join(kv_test_dataset_dir, f"test_{kv_length}.json")
             with open(file_path) as f:
