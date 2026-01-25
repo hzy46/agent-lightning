@@ -410,7 +410,7 @@ def main(
                 "data": data
             })
 
-    kv_train_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
+    kv_train_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
     for kv_length in train_kv_lengths:
         file_path = os.path.join(kv_train_dataset_dir, f"train_{kv_length}.json")
         with open(file_path) as f:
@@ -451,7 +451,7 @@ def main(
                     "data": data
                 })
     elif len(train_kv_lengths) > 0:
-        kv_test_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval")
+        kv_test_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
         if method == "normal":
             kv_lengths = ["8K"]
         else:
