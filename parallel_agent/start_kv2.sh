@@ -29,4 +29,5 @@ python train.py --method stream --train_gsm_lengths "[]" \
     --fix_chunk_num 2 \
     --train_kv_lengths "['8K','16K']" \
     --from_model Qwen/Qwen2.5-7B-Instruct \
-    --agg_mode True
+    --agg_mode True \
+    --train_kv_subset maxhop4_maxans2

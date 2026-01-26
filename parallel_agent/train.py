@@ -296,6 +296,7 @@ def main(
     train_doc_nums=[],
     train_gsm_lengths=["8K", "16K"],
     train_kv_lengths=[], # "8K", "16K"
+    train_kv_subset="maxhop2_maxans2",
     from_model=os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
     method="parallel",
     eval_ruler=False,
@@ -325,7 +326,7 @@ def main(
     if len(train_gsm_lengths) > 0:
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     if len(train_kv_lengths) > 0:
-        experiment_name += "kv_v2_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
+        experiment_name += f"kv_v2_{train_kv_subset}" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if fix_chunk_num is not None:
@@ -335,7 +336,6 @@ def main(
         experiment_name = experiment_name + f"agg_"
     if use_new_gen_data:
         experiment_name = experiment_name + f"data_new_gen_"
-
 
 
     experiment_name = experiment_name.strip("_")
@@ -410,7 +410,7 @@ def main(
                 "data": data
             })
 
-    kv_train_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
+    kv_train_dataset_dir = os.path.expanduser(f"~/multi_hop_kv_retrieval_v2_{train_kv_subset}")
     for kv_length in train_kv_lengths:
         file_path = os.path.join(kv_train_dataset_dir, f"train_{kv_length}.json")
         with open(file_path) as f:
@@ -451,7 +451,7 @@ def main(
                     "data": data
                 })
     elif len(train_kv_lengths) > 0:
-        kv_test_dataset_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
+        kv_test_dataset_dir = os.path.expanduser(f"~/multi_hop_kv_retrieval_v2_{train_kv_subset}")
         if method == "normal":
             kv_lengths = ["8K"]
         else:
