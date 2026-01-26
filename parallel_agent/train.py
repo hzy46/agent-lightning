@@ -326,7 +326,7 @@ def main(
     if len(train_gsm_lengths) > 0:
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     if len(train_kv_lengths) > 0:
-        experiment_name += f"kv_v2_{train_kv_subset}" + "-".join([str(length) for length in train_kv_lengths]) + "_"
+        experiment_name += f"kv_v2_{train_kv_subset}_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if fix_chunk_num is not None:
