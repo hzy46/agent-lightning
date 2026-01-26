@@ -3,6 +3,7 @@ import string
 import numpy as np
 import os
 import json
+import argparse
 
 length_str_to_key_num = {
     "8K": 600,
@@ -94,21 +95,28 @@ def build_data_list(num_samples, length_str, min_answer_num, max_answer_num, min
 
 # 示例
 if __name__ == "__main__":
-    save_dir = os.path.expanduser("~/multi_hop_kv_retrieval_v2")
-    if os.path.exists(save_dir) is False:
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max_hop_num", type=int, default=2)
+    parser.add_argument("--max_answer_num", type=int, default=2)
+    args = parser.parse_args()
+
+    max_hop_num = args.max_hop_num
+    max_answer_num = args.max_answer_num
+
+    save_dir = os.path.expanduser(
+        f"~/multi_hop_kv_retrieval_v2_maxhop{max_hop_num}_maxans{max_answer_num}"
+    )
+    if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     train_num = 5000
     test_num = 300
 
     min_hop_num = 1
-    max_hop_num = 2
+    min_answer_num = 1
 
     for length_str in ["8K", "16K"]:
-        # 原来的 answer_num -> 改成范围
-        min_answer_num = 1
-        max_answer_num = 2
-
         train_save_path = os.path.join(
             save_dir,
             f"train_{length_str}.json"
