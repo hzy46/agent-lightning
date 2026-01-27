@@ -333,7 +333,7 @@ def main(
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if max_rounds != 3: # default = 3
-         experiment_name = experiment_name + f"max_rounds_{fix_chunk_num}_"
+         experiment_name = experiment_name + f"max_rounds_{max_rounds}_"
     if fix_chunk_num is not None:
         experiment_name = experiment_name + f"fix_chunk_num_{fix_chunk_num}_"
     if agg_mode:
