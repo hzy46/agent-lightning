@@ -95,6 +95,7 @@ parallel_config = {
     "use_token_penalty": False,
     "token_penalty_L": 1024,
     "token_penalty_k": 0.0001,
+    "max_rounds": 3,
 }
 
 @agl.rollout
@@ -117,6 +118,7 @@ async def solver_agent_parallel(task, llm) -> None:
             task["task_type"],
             temperature,
             fix_chunk_num=fix_chunk_num,
+            max_rounds=parallel_config["max_rounds"],
         )
     except Exception as e:
         print("Failure:", traceback.format_exc())
@@ -300,6 +302,7 @@ def main(
     from_model=os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
     method="parallel",
     eval_ruler=False,
+    max_rounds=3,
     use_token_penalty=False,
     token_penalty_L=1024,
     token_penalty_k=0.0001,
@@ -329,6 +332,8 @@ def main(
         experiment_name += f"kv_v2_{train_kv_subset}_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
+    if max_rounds != 3: # default = 3
+         experiment_name = experiment_name + f"max_rounds_{fix_chunk_num}_"
     if fix_chunk_num is not None:
         experiment_name = experiment_name + f"fix_chunk_num_{fix_chunk_num}_"
     if agg_mode:
@@ -356,6 +361,7 @@ def main(
         parallel_config['token_penalty_L'] = token_penalty_L
         parallel_config['token_penalty_k'] = token_penalty_k
         parallel_config['fix_chunk_num'] = fix_chunk_num
+        parallel_config['max_rounds'] = max_rounds
     elif method == "stream":
         if agg_mode:
             verl_config["data"]["max_prompt_length"] = 10240
@@ -374,6 +380,7 @@ def main(
         stream_config['token_penalty_L'] = token_penalty_L
         stream_config['token_penalty_k'] = token_penalty_k
         stream_config['algorithm'].fix_chunk_num = fix_chunk_num
+        stream_config['algorithm'].max_rounds = max_rounds
 
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240

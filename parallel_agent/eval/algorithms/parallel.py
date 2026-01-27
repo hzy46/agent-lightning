@@ -8,9 +8,6 @@ async def get_async_client():
     return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
 
 
-MAX_ROUNDS = 3
-
-
 chunk_prompt_template = """
 You are a chunk-level agent collaborating with a central long-context processing agent to complete a task.
 
