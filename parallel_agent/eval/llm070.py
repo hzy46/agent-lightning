@@ -216,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument('--tp', type=int, default=1, help='tensor parallel size')    
     args = parser.parse_args()
     os.chdir(pwd)
-    cmd = f"RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=1 exec serve run --name VLLMMultiDeployment {file}:build_app model={args.model} tensor-parallel-size={args.tp} enable-prefix-cache"
+    cmd = f"RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=1 exec serve run --name VLLMMultiDeployment {file}:build_app model={args.model} tensor-parallel-size={args.tp} enable-prefix-caching=true"
     import subprocess
     p = subprocess.Popen(cmd, shell=True)
     try:
