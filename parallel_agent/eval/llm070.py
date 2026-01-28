@@ -178,6 +178,7 @@ def build_app(cli_args: Dict[str, str]) -> serve.Application:
     parsed_args = parse_vllm_args(cli_args)
     engine_args = AsyncEngineArgs.from_cli_args(parsed_args)
     engine_args.worker_use_ray = True
+    engine_args.enable_prefix_caching = True
     tp = engine_args.tensor_parallel_size
     logger.info(f"Tensor parallelism = {tp}")
     pg_resources = []
@@ -216,7 +217,7 @@ if __name__ == "__main__":
     parser.add_argument('--tp', type=int, default=1, help='tensor parallel size')    
     args = parser.parse_args()
     os.chdir(pwd)
-    cmd = f"RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=1 exec serve run --name VLLMMultiDeployment {file}:build_app model={args.model} tensor-parallel-size={args.tp} enable-prefix-caching="
+    cmd = f"RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=1 exec serve run --name VLLMMultiDeployment {file}:build_app model={args.model} tensor-parallel-size={args.tp}"
     import subprocess
     p = subprocess.Popen(cmd, shell=True)
     try:
