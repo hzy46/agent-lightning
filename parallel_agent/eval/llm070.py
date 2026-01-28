@@ -178,7 +178,8 @@ def build_app(cli_args: Dict[str, str]) -> serve.Application:
     parsed_args = parse_vllm_args(cli_args)
     engine_args = AsyncEngineArgs.from_cli_args(parsed_args)
     engine_args.worker_use_ray = True
-    engine_args.enable_prefix_caching = True
+    # need more check
+    # engine_args.enable_prefix_caching = True
     tp = engine_args.tensor_parallel_size
     logger.info(f"Tensor parallelism = {tp}")
     pg_resources = []
