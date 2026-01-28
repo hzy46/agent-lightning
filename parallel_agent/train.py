@@ -19,6 +19,7 @@ import fire
 from functools import partial
 import math
 
+
 verl_config = {
     "algorithm": {
         "adv_estimator": "grpo",
@@ -376,6 +377,9 @@ def main(
         else:
             verl_config["data"]["max_prompt_length"] = 10240
             verl_config["data"]["max_response_length"] = 1024
+        if max_rounds > 3:
+            verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 2
+
         stream_config['use_token_penalty'] = use_token_penalty
         stream_config['token_penalty_L'] = token_penalty_L
         stream_config['token_penalty_k'] = token_penalty_k
