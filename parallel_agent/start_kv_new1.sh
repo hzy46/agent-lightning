@@ -13,4 +13,5 @@ python train.py --method stream --train_gsm_lengths "[]" \
     --from_model Qwen/Qwen2.5-7B-Instruct \
     --agg_mode True \
     --train_kv_subset maxhop4_maxans2 \
-    --fix_chunk_num 2
+    --fix_chunk_num 2 \
+    --max_rounds 6
