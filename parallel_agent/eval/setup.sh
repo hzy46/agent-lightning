@@ -6,6 +6,7 @@ source ~/.bashrc
 conda activate vllm
 pip install vllm==0.8.2
 pip install "ray[serve]" fire
+pip install transformers==4.57.3
 
 
 
