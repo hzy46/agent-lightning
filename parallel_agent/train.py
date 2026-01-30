@@ -381,7 +381,7 @@ def main(
         else:
             verl_config["data"]["max_prompt_length"] = 10240
             verl_config["data"]["max_response_length"] = 1024
-        if max_rounds >= 6 and max_rounds <= 8
+        if max_rounds >= 6 and max_rounds <= 8:
             verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 2
         elif max_rounds > 8:
             verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 1
