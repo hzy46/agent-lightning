@@ -89,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--min_answer_num", type=int, default=1)
     parser.add_argument("--max_answer_num", type=int, required=True)
     parser.add_argument("--train_num", type=int, default=5000)
-    parser.add_argument("--test_num", type=int, default=5000)
+    parser.add_argument("--test_num", type=int, default=300)
     parser.add_argument("--save_dir", type=str, default=None)
     args = parser.parse_args()
 
