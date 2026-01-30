@@ -208,7 +208,7 @@ async def solver_agent_stream(task, llm) -> None:
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     elif task["task_type"] == "memagent_train":
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
-    elif task["task_type"]  == "kv_retrieval":
+    elif task["task_type"]  == "kv_retrieval" or task["task_type"] == "vt":
         reward = score_func_kv_retrieval(task["response"], task["answers"])
     else:
         raise NotImplementedError
