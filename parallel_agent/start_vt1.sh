@@ -12,6 +12,6 @@ python train.py --method stream --train_gsm_lengths "[]" \
     --train_kv_lengths "['16K']" \
     --from_model Qwen/Qwen2.5-7B-Instruct \
     --agg_mode True \
-    --train_kv_subset minans1_maxans2 \
+    --train_kv_subset minans1_maxans4 \
     --fix_chunk_num 4 \
     --max_rounds 6
