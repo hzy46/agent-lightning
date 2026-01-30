@@ -182,7 +182,7 @@ async def solver_agent_stream(task, llm) -> None:
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # model_config, tokenizer, algorithm_config, sample, task_type)
         # print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
-        if task["task_type"] == "ruler" or task["task_type"] == "kv_retrieval":
+        if task["task_type"] == "ruler" or task["task_type"] == "kv_retrieval" or task["task_type"] == "vt":
             await stream_retrieval_async_fill_in_response(
                 stream_model_config,
                 tokenizer,
@@ -253,7 +253,7 @@ async def solver_agent_normal(task, llm) -> None:
         reward = score_func_ruler(task["sub_task_type"], task['outputs'], task['response'])['sub_em']
     elif task["task_type"] == "memagent_train":
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
-    elif task["task_type"] == "kv_retrieval":
+    elif task["task_type"] == "kv_retrieval" or task["task_type"] == "vt":
         reward = score_func_kv_retrieval(task["response"], task["answers"])
     else:
         raise NotImplementedError
@@ -301,6 +301,8 @@ def main(
     train_gsm_lengths=["8K", "16K"],
     train_kv_lengths=[], # "8K", "16K"
     train_kv_subset="maxhop2_maxans2",
+    train_vt_lengths=[],  # "8K", "16K"
+    train_vt_subset="minans1_maxans5",
     from_model=os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
     method="parallel",
     eval_ruler=False,
@@ -333,6 +335,8 @@ def main(
         experiment_name += "gsm_" + "-".join([str(length) for length in train_gsm_lengths]) + "_"
     if len(train_kv_lengths) > 0:
         experiment_name += f"kv_v2_{train_kv_subset}_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
+    if len(train_vt_lengths) > 0:
+        experiment_name += f"vt_{train_vt_subset}_" + "-".join([str(length) for length in train_vt_lengths]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if max_rounds != 3: # default = 3
@@ -439,6 +443,18 @@ def main(
             }) 
 
 
+
+    vt_train_dataset_dir = os.path.expanduser(f"~/vt_{train_kv_subset}")
+    for vt_length in train_vt_lengths:
+        file_path = os.path.join(vt_train_dataset_dir, f"train_{kv_length}.json")
+        with open(file_path) as f:
+            data_list = json.load(f)
+        for data in data_list:
+            train_sample_list.append({
+                "data": data
+            })
+
+
     rng.shuffle(train_sample_list)
 
     # prepare_test
@@ -476,6 +492,20 @@ def main(
             kv_lengths = ["8K", "16K"]
         for kv_length in kv_lengths:
             file_path = os.path.join(kv_test_dataset_dir, f"test_{kv_length}.json")
+            with open(file_path) as f:
+                data_list = json.load(f)
+            for data in data_list:
+                test_sample_list.append({
+                    "data": data
+                })
+    elif len(train_vt_lengths) > 0:
+        vt_test_dataset_dir = os.path.expanduser(f"~/vt_{train_kv_subset}")
+        if method == "normal":
+            vt_lengths = ["8K"]
+        else:
+            vt_lengths = ["8K", "16K"]
+        for vt_length in vt_lengths:
+            file_path = os.path.join(vt_test_dataset_dir, f"test_{vt_length}.json")
             with open(file_path) as f:
                 data_list = json.load(f)
             for data in data_list:

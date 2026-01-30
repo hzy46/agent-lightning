@@ -349,7 +349,7 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         answer_prompt_template = answer_prompt_template_gsm_inifinite
     elif task_type == "ruler":
         answer_prompt_template = answer_prompt_template_ruler
-    elif task_type == "kv_retrieval":
+    elif task_type == "kv_retrieval" or task_type == "vt":
         answer_prompt_template = answer_prompt_template_kv_retrieval
     else:
         raise NotImplementedError
@@ -381,7 +381,7 @@ async def async_fill_in_response(model_config, tokenizer, algorithm_config, samp
     elif task_type == "memagent_train":
         context = sample["context"].strip()
         query = sample['input'].strip()
-    elif task_type == "kv_retrieval":
+    elif task_type == "kv_retrieval" or task_type == 'vt':
         context = sample["context"].strip()
         query = sample['query'].strip()
     else:
