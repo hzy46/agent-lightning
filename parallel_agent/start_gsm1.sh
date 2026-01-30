@@ -10,4 +10,6 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
     # NCCL_P2P_DISABLE=1 \
     # NCCL_CUMEM_HOST_ENABLE=0 \
 
-python train.py --method stream --train_gsm_lengths "['16K']" --fix_chunk_num 2 --agg_mode True
+python train.py --method stream --train_gsm_lengths "['16K']" \
+    --fix_chunk_num 2 --agg_mode True --max_rounds 6 \
+    --only_answer_in_gsm True
