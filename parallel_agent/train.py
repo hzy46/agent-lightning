@@ -503,7 +503,7 @@ def main(
         if method == "normal":
             vt_lengths = ["8K"]
         else:
-            vt_lengths = ["8K", "16K"]
+            vt_lengths = ["16K"]
         for vt_length in vt_lengths:
             file_path = os.path.join(vt_test_dataset_dir, f"test_{vt_length}.json")
             with open(file_path) as f:
