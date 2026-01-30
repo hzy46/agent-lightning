@@ -118,7 +118,7 @@ def main(
                 if fix_chunk_num is None:
                     model_save_dir = os.path.join(save_root_dir,  "{}_round{}_chunk{}_{}".format(method, max_rounds, chunk_size, model_save_name))
                 else:
-                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_{}".format(method, fix_chunk_num, model_save_name))
+                    model_save_dir = os.path.join(save_root_dir,  "{}_fix_chunk_num{}_round{}_{}".format(method, fix_chunk_num, max_rounds, model_save_name))
             elif method == 'memagent':
                 model_save_dir = os.path.join(save_root_dir,  "{}_chunk{}_{}".format(method, chunk_size, model_save_name))
             else:
