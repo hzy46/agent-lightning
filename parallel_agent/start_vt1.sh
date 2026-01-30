@@ -9,9 +9,9 @@ env NCCL_CUMEM_HOST_ENABLE=0 \
 python data/gen_vt.py --min_answer_num 1 --max_answer_num 4
 
 python train.py --method stream --train_gsm_lengths "[]" \
-    --train_kv_lengths "['16K']" \
+    --train_vt_lengths "['16K']" \
     --from_model Qwen/Qwen2.5-7B-Instruct \
     --agg_mode True \
-    --train_kv_subset minans1_maxans4 \
+    --train_vt_subset minans1_maxans4 \
     --fix_chunk_num 4 \
     --max_rounds 6
