@@ -444,9 +444,9 @@ def main(
 
 
 
-    vt_train_dataset_dir = os.path.expanduser(f"~/vt_{train_kv_subset}")
+    vt_train_dataset_dir = os.path.expanduser(f"~/vt_{train_vt_subset}")
     for vt_length in train_vt_lengths:
-        file_path = os.path.join(vt_train_dataset_dir, f"train_{kv_length}.json")
+        file_path = os.path.join(vt_train_dataset_dir, f"train_{vt_length}.json")
         with open(file_path) as f:
             data_list = json.load(f)
         for data in data_list:
@@ -499,7 +499,7 @@ def main(
                     "data": data
                 })
     elif len(train_vt_lengths) > 0:
-        vt_test_dataset_dir = os.path.expanduser(f"~/vt_{train_kv_subset}")
+        vt_test_dataset_dir = os.path.expanduser(f"~/vt_{train_vt_subset}")
         if method == "normal":
             vt_lengths = ["8K"]
         else:
