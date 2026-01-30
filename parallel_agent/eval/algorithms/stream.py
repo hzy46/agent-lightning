@@ -290,7 +290,7 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         if is_end:
             break
 
-    if only_answer_in_gsm
+    if only_answer_in_gsm:
         stream_answer_list = []
         for stream in streams:
             stream_answer_list.append("Chunk {}\nAnswer: {}\n".format(
