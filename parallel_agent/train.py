@@ -163,6 +163,7 @@ stream_config = {
         max_rounds=3,
         chunk_size=5000, 
         fix_chunk_num=None,
+        only_answer_in_gsm=False,
     )
 }
 
@@ -310,6 +311,7 @@ def main(
     fix_chunk_num=None, # for parallel only
     agg_mode=False,
     use_new_gen_data=False,
+    only_answer_in_gsm=False,
 ):
 
     # set name according to paras
@@ -342,6 +344,8 @@ def main(
         experiment_name = experiment_name + f"agg_"
     if use_new_gen_data:
         experiment_name = experiment_name + f"data_new_gen_"
+    if only_answer_in_gsm and method == "stream":
+        experiment_name = experiment_name + f"only_ans_"
 
 
     experiment_name = experiment_name.strip("_")
@@ -377,14 +381,17 @@ def main(
         else:
             verl_config["data"]["max_prompt_length"] = 10240
             verl_config["data"]["max_response_length"] = 1024
-        if max_rounds > 3:
+        if max_rounds >= 3 and max_rounds <= 6:
             verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 2
+        elif max_rounds > 6:
+            verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 1
 
         stream_config['use_token_penalty'] = use_token_penalty
         stream_config['token_penalty_L'] = token_penalty_L
         stream_config['token_penalty_k'] = token_penalty_k
         stream_config['algorithm'].fix_chunk_num = fix_chunk_num
         stream_config['algorithm'].max_rounds = max_rounds
+        stream_config['algorithm'].only_answer_in_gsm = only_answer_in_gsm
 
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
