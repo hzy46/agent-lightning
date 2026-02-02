@@ -183,6 +183,7 @@ class Stream(object):
             return
         self.broadcast = ""
         self.answer = ""
+        self.is_round_active = False
         if len(self.messages) == 0:
             self.messages.append({
                 "role": "user",
@@ -220,6 +221,7 @@ class Stream(object):
             self.received_broadcast_information = ""
             self.received_answer_information = ""
 
+        self.is_round_active = True
         response = await call_llm(model_config, self.messages, log_dict)
         self.messages.append({
             "role": "assistant",
@@ -311,12 +313,11 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         is_end = True
 
         for stream in streams:
-            if not(stream.is_finished):
-                if stream.answer != "":
-                    # in this case, should be broadcast or error
-                    active_broadcast_count += 1
-                    if stream.broadcast == "":
-                        sparse_broadcast_count += 1
+            if not(stream.is_finished) and stream.is_round_active:
+                # in this case, should be broadcast or error
+                active_broadcast_count += 1
+                if stream.broadcast == "":
+                    sparse_broadcast_count += 1
 
         for stream in streams:
             if not(stream.is_finished):
