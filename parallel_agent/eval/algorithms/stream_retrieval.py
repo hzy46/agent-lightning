@@ -163,6 +163,7 @@ class AlgorithmConfig(object):
         self.fix_chunk_num = fix_chunk_num
 
 
+
 class Stream(object):
 
     def __init__(self, context, query, chunk_index, chunk_total):
@@ -297,6 +298,8 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         Stream(context=chunk, query=query, chunk_index=chunk_i + 1, chunk_total=len(chunks))
         for chunk_i, chunk in enumerate(chunks)
     ]
+    active_broadcast_count = 0
+    sparse_broadcast_count = 0
     for round_idx in range(1, algorithm_config.max_rounds + 1):
         tasks = [
             stream.run(model_config, log_dict)
@@ -306,6 +309,15 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         # for each stream, update the received information
         # 结束条件：所有 stream 都 finished 或 无 broadcast 和 answer
         is_end = True
+
+        for stream in streams:
+            if not(stream.is_finished):
+                if stream.answer != "":
+                    # in this case, should be broadcast or error
+                    active_broadcast_count += 1
+                    if stream.broadcast == "":
+                        sparse_broadcast_count += 1
+
         for stream in streams:
             if not(stream.is_finished):
                 broadcast_info_text_list = []
@@ -367,7 +379,13 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
     if answer is None:
         answer = ""
 
-    return answer, stream_answer, log_dict["all_responses"], log_dict["all_requests"]
+    # calculate sparse rate
+    if active_broadcast_count > 0:
+        broadcast_sparse_ratio = sparse_broadcast_count / active_broadcast_count
+    else:
+        broadcast_sparse_ratio = 0
+
+    return answer, stream_answer, log_dict["all_responses"], log_dict["all_requests"], broadcast_sparse_ratio
 
 
 
@@ -399,10 +417,11 @@ async def async_fill_in_response(model_config, tokenizer, algorithm_config, samp
         chunk = tokenizer.decode(chunk_ids)
         chunks.append(chunk)
 
-    response, history_messages, all_responses, all_requests = await run_query_pipeline(model_config, algorithm_config, chunks, query, task_type)
+    response, history_messages, all_responses, all_requests, broadcast_sparse_ratio = await run_query_pipeline(model_config, algorithm_config, chunks, query, task_type)
     sample["history_messages"] = history_messages
     sample["response"] = response
     sample["all_requests"] = all_requests
+    sample["broadcast_sparse_ratio"] = broadcast_sparse_ratio
 
     # for token penalty, this may affect timing
     output_token_num = 0

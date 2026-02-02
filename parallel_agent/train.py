@@ -164,7 +164,9 @@ stream_config = {
         chunk_size=5000, 
         fix_chunk_num=None,
         only_answer_in_gsm=False,
-    )
+    ),
+    "use_sparse_reward": False,
+    "max_sparse_reward": 0.25,
 }
 
 
@@ -227,6 +229,15 @@ async def solver_agent_stream(task, llm) -> None:
         if reward > 0:
             print(f"reward: {reward}  output_token_num: {output_token_num} cost: {cost} reward - cost: {reward - cost}")
             reward = reward - cost
+
+    # sparse reward
+    use_sparse_reward = stream_config['use_sparse_reward']
+    max_sparse_reward = stream_config['max_sparse_reward']
+    if use_sparse_reward:
+        broadcast_sparse_ratio = task['broadcast_sparse_ratio']
+        sparse_reward = max_sparse_reward * broadcast_sparse_ratio
+        print(f"reward: {reward}  sparse_reward: {sparse_reward} broadcast_sparse_ratio: {broadcast_sparse_ratio} reward + sparse_reward: {reward + sparse_reward}")
+        reward = reward + sparse_reward
 
     # This reward will be tracked automatically
     agl.emit_reward(reward)
@@ -314,6 +325,8 @@ def main(
     agg_mode=False,
     use_new_gen_data=False,
     only_answer_in_gsm=False,
+    use_sparse_reward=False,
+    max_sparse_reward=0.5,
 ):
 
     # set name according to paras
@@ -350,6 +363,8 @@ def main(
         experiment_name = experiment_name + f"data_new_gen_"
     if only_answer_in_gsm and method == "stream":
         experiment_name = experiment_name + f"only_ans_"
+    if use_sparse_reward:
+        experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}_"
 
 
     experiment_name = experiment_name.strip("_")
@@ -396,6 +411,8 @@ def main(
         stream_config['algorithm'].fix_chunk_num = fix_chunk_num
         stream_config['algorithm'].max_rounds = max_rounds
         stream_config['algorithm'].only_answer_in_gsm = only_answer_in_gsm
+        stream_config['use_sparse_reward'] = use_sparse_reward
+        stream_config['max_sparse_reward'] = max_sparse_reward
 
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240
