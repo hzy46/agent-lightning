@@ -1,23 +1,30 @@
 ray stop
 
+
+
 # 1. 断言环境变量 ZHIYUHE 存在
 if [[ -z "${ZHIYUHE:-}" ]]; then
   echo "Error: ZHIYUHE 环境变量不存在"
   exit 1
 fi
 
-SRC="$ZHIYUHE/models/train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_chunk_num_4_agg/global_step_200"
+SRC="$ZHIYUHE/train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_chunk_num_4_agg/global_step_200"
 DST="$HOME/train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_chunk_num_4_agg/global_step_200"
 
-# 2. 如果目标文件夹已存在，则不拷贝
+# 2. 如果目标目录已存在，则不拷贝
 if [[ -d "$DST" ]]; then
   echo "目标目录已存在，跳过拷贝：$DST"
   exit 0
 fi
 
-# 3. 拷贝目录
+# 3. 创建 DST 的父目录（如果不存在）
+mkdir -p "$(dirname "$DST")"
+
+# 4. 拷贝目录
 cp -r "$SRC" "$DST"
+
 echo "拷贝完成：$SRC -> $DST"
+
 
 export NCCL_CUMEM_HOST_ENABLE=0
 
