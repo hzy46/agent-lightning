@@ -39,7 +39,7 @@ def convert_dataframe(df, num_docs):
                 "query": curr_q,
                 "context": context,
                 # for multiple answer
-                "ground_truths": curr_a,
+                "ground_truths": [str(a) for a in curr_a.tolist()],
                 "num_docs": num_docs,
             }
         )
