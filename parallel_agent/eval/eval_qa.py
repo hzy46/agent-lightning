@@ -10,7 +10,7 @@ import numpy as np
 from transformers import AutoTokenizer
 import asyncio
 import fire
-from eval.hotpotqa_verifier import compute_score as score_func_qa
+from hotpotqa_verifier import compute_score as score_func_qa
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
