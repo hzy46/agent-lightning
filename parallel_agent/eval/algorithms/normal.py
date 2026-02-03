@@ -37,6 +37,18 @@ $DOC$
 $Q$"""
 
 
+prompt_template_qa = """Please read the following text and answer the question below.
+
+<text>
+$DOC$
+</text>
+
+$Q$
+
+Format your answer in \\boxed{}, e.g. \\boxed{your answer}.
+"""
+
+
 def fill_in_response(api_root_url, model, sample, task_type):
     if task_type == "ruler":
         max_new_tokens = 8192
@@ -59,6 +71,13 @@ def fill_in_response(api_root_url, model, sample, task_type):
         context = sample["context"]
         query = sample["query"]
         prompt_template = prompt_template_kv_retrieval
+    elif task_type == "qa":
+        max_new_tokens = 2048
+        temperature = 0
+        top_p = 1
+        context = sample["context"]
+        query = sample["query"]
+        prompt_template = prompt_template_qa
     else:
         raise NotImplementedError
 

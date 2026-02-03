@@ -70,6 +70,20 @@ template_final_gsm_infinite = """You are presented with a problem and a previous
 </memory>
 """
 
+template_final_qa = """You are presented with a problem and a previous memory. Please answer the problem based on the previous memory.
+
+<problem> 
+{prompt}
+</problem>
+
+<memory>
+{memory}
+</memory>
+
+Format your answer in \\boxed{}, e.g. \\boxed{your answer}.
+"""
+
+
 
 no_memory = "No previous memory"
 
@@ -86,6 +100,10 @@ async def _async_fill_in_response(api_root_url, sample, model, tokenizer, task_t
         prompt = sample['input'].strip()
     elif task_type == "gsm_infinite":
         template_final = template_final_gsm_infinite
+        context = sample["context"].strip()
+        prompt = sample['query'].strip()
+    elif task_type == 'qa':
+        template_final = template_final_qa
         context = sample["context"].strip()
         prompt = sample['query'].strip()
     else:
