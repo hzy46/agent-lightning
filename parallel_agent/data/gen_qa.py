@@ -78,7 +78,7 @@ def main():
     train_out = out_dir / f"train_doc{num_docs}.json"
     test_out = out_dir / f"test_doc{num_docs}.json"
 
-    embed()
+    # embed()
     with open(train_out, "w", encoding="utf-8") as f:
         json.dump(train_data, f)
 
