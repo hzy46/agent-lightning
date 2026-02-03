@@ -4,7 +4,6 @@ import sys
 import json
 import random
 from multiprocessing import Pool
-from transformers import AutoTokenizer
 import pandas as pd
 from pathlib import Path
 
