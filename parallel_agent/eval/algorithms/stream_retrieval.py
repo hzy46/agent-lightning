@@ -141,6 +141,23 @@ You MUST follow the format <answer>final_value_1, ..., final_value_n</answer> or
 """
 
 
+answer_prompt_template_qa = """
+You are working on a long-text task. The full text has been split into {chunk_total} chunks, and {chunk_total} agents are collaborating to answer the following question.
+
+Query:
+{query}
+
+Agent Collaboration Stream:
+{stream_content}
+
+You need to extract all content enclosed in <answer></answer> from the agentic stream, synthesize them into a final answer, and output the result.
+
+Your output format should be <answer>Therefore, the answer is \\boxed{your final answer}.</answer>.
+
+You MUST follow the format <answer>Therefore, the answer is \\boxed{your final answer}.</answer> without adding anything else.
+"""
+
+
 
 def extract_tag(text: str, tag: str) -> str | None:
     match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.S)
@@ -364,6 +381,8 @@ async def run_query_pipeline(model_config, algorithm_config, chunks, query, task
         answer_prompt_template = answer_prompt_template_ruler
     elif task_type == "kv_retrieval" or task_type == "vt":
         answer_prompt_template = answer_prompt_template_kv_retrieval
+    elif task_type == 'qa':
+        answer_prompt_template = answer_prompt_template_qa
     else:
         raise NotImplementedError
 
@@ -400,7 +419,7 @@ async def async_fill_in_response(model_config, tokenizer, algorithm_config, samp
     elif task_type == "memagent_train":
         context = sample["context"].strip()
         query = sample['input'].strip()
-    elif task_type == "kv_retrieval" or task_type == 'vt':
+    elif task_type == "kv_retrieval" or task_type == 'vt' or task_type == 'qa':
         context = sample["context"].strip()
         query = sample['query'].strip()
     else:

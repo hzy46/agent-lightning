@@ -13,7 +13,7 @@ from eval.utils import score_func_gsm_infinite, score_func as score_func_ruler
 from eval.utils import score_func_kv_retrieval
 from eval.algorithms.stream import async_fill_in_response as stream_async_fill_in_response, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
 from eval.algorithms.stream_retrieval import async_fill_in_response as stream_retrieval_async_fill_in_response
-
+from eval.hotpotqa_verifier import compute_score as score_func_qa
 import traceback
 import fire
 from functools import partial
@@ -185,7 +185,7 @@ async def solver_agent_stream(task, llm) -> None:
         task = copy.deepcopy(task['data']) # workaround 因为 agl 似乎会强行 merge 不一样的 task 转成一样的 key
         # model_config, tokenizer, algorithm_config, sample, task_type)
         # print(f"stream_algorithm_config: fix_chunk_num={stream_config['algorithm'].fix_chunk_num}")
-        if task["task_type"] == "ruler" or task["task_type"] == "kv_retrieval" or task["task_type"] == "vt":
+        if task["task_type"] == "ruler" or task["task_type"] == "kv_retrieval" or task["task_type"] == "vt" or task['task_type'] == 'qa':
             await stream_retrieval_async_fill_in_response(
                 stream_model_config,
                 tokenizer,
@@ -213,6 +213,8 @@ async def solver_agent_stream(task, llm) -> None:
         reward = score_func_ruler("qa", task['answers'], task['response'])['sub_em']
     elif task["task_type"]  == "kv_retrieval" or task["task_type"] == "vt":
         reward = score_func_kv_retrieval(task["response"], task["answers"])
+    elif task['task_type'] == 'qa':
+        reward = score_func_qa(task["response"], task["ground_truth"])
     else:
         raise NotImplementedError
 
@@ -323,6 +325,7 @@ def main(
     train_kv_subset="maxhop2_maxans2",
     train_vt_lengths=[],  # "8K", "16K"
     train_vt_subset="minans1_maxans5",
+    train_qa_doc_nums=[],
     from_model=os.path.expanduser("~/train_qwen2.5-7b_normal_gsm_8K/global_step_500"),
     method="parallel",
     eval_ruler=False,
@@ -362,6 +365,8 @@ def main(
         experiment_name += f"kv_v2_{train_kv_subset}_" + "-".join([str(length) for length in train_kv_lengths]) + "_"
     if len(train_vt_lengths) > 0:
         experiment_name += f"vt_{train_vt_subset}_" + "-".join([str(length) for length in train_vt_lengths]) + "_"
+    if len(train_qa_doc_nums) > 0:
+        experiment_name += f"qa_" + "-".join([str(doc_num) for doc_num in train_qa_doc_nums]) + "_"
     if use_token_penalty:
         experiment_name = experiment_name + f"token_penalty_L{token_penalty_L}_k{token_penalty_k}_"
     if max_rounds != 3: # default = 3
@@ -476,11 +481,19 @@ def main(
                 "data": data
             }) 
 
-
-
     vt_train_dataset_dir = os.path.expanduser(f"~/vt_{train_vt_subset}")
     for vt_length in train_vt_lengths:
         file_path = os.path.join(vt_train_dataset_dir, f"train_{vt_length}.json")
+        with open(file_path) as f:
+            data_list = json.load(f)
+        for data in data_list:
+            train_sample_list.append({
+                "data": data
+            })
+
+    qa_train_dataset_dir = os.path.expanduser(f"~/qa")
+    for doc_num in train_qa_doc_nums:
+        file_path = os.path.join(qa_train_dataset_dir, f"train_doc{doc_num}.json")
         with open(file_path) as f:
             data_list = json.load(f)
         for data in data_list:
@@ -540,6 +553,17 @@ def main(
             vt_lengths = ["16K"]
         for vt_length in vt_lengths:
             file_path = os.path.join(vt_test_dataset_dir, f"test_{vt_length}.json")
+            with open(file_path) as f:
+                data_list = json.load(f)
+            for data in data_list:
+                test_sample_list.append({
+                    "data": data
+                })
+    elif len(train_qa_doc_nums) > 0:
+        qa_test_dataset_dir = os.path.expanduser(f"~/qa")
+        val_doc_nums = [100]
+        for doc_num in val_doc_nums:
+            file_path = os.path.join(qa_test_dataset_dir, f"test_doc{doc_num}.json")
             with open(file_path) as f:
                 data_list = json.load(f)
             for data in data_list:
