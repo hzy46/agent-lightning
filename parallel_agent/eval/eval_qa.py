@@ -10,7 +10,7 @@ import numpy as np
 from transformers import AutoTokenizer
 import asyncio
 import fire
-from utils import score_func
+from eval.hotpotqa_verifier import compute_score as score_func_qa
 from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
@@ -186,17 +186,15 @@ def main(
         avg_task_time = (end_time - start_time) / len(samples)
 
         for sample in samples:
-            metrics = score_func(task, sample["outputs"], sample["response"])
-            for k, v in metrics.items():
-                sample[k] = v
+            score = max([score_func_qa(task["response"], ground_truth) for ground_truth in task['ground_truths']])
+            sample['score'] = score
         
-        print(f"task: {task} length: {context_length_str} sub_em: {np.mean([sample['sub_em'] for sample in samples]):.2f} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
+        print(f"doc_num: {doc_num} score: {score} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
         
         with open(result_save_path, "w") as f:
             if keep_origin is False:
                 for sample in samples:
                     del sample["context"]
-                    del sample["input"]
             json.dump(samples, f)
 
 
