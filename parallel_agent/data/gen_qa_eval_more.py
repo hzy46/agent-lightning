@@ -156,7 +156,7 @@ def generate_input_output(index, num_docs):
         "query": curr_q,
         "context": context,
         # for multiple answer
-        "ground_truths": [str(a) for a in curr_a.tolist()],
+        "ground_truths": [str(a) for a in curr_a],
         "num_docs": num_docs,
     }
     return formatted_output
