@@ -167,6 +167,7 @@ stream_config = {
     ),
     "use_sparse_reward": False,
     "max_sparse_reward": 0.25,
+    "sparse_reward_only_one": False
 }
 
 
@@ -233,11 +234,19 @@ async def solver_agent_stream(task, llm) -> None:
     # sparse reward
     use_sparse_reward = stream_config['use_sparse_reward']
     max_sparse_reward = stream_config['max_sparse_reward']
+    sparse_reward_only_one = stream_config['sparse_reward_only_one']
     if use_sparse_reward:
         broadcast_sparse_ratio = task['broadcast_sparse_ratio']
         sparse_reward = max_sparse_reward * broadcast_sparse_ratio
-        print(f"reward: {reward}  sparse_reward: {sparse_reward} broadcast_sparse_ratio: {broadcast_sparse_ratio} reward + sparse_reward: {reward + sparse_reward}")
-        reward = reward + sparse_reward
+        if sparse_reward_only_one:
+            if reward == 1:
+                reward = reward + sparse_reward
+                print(f"reward: {reward}  sparse_reward: {sparse_reward} broadcast_sparse_ratio: {broadcast_sparse_ratio} reward + sparse_reward: {reward + sparse_reward}")
+            else:
+                print(f"reward: {reward}  broadcast_sparse_ratio: {broadcast_sparse_ratio} doesn't apply")
+        else:
+            print(f"reward: {reward}  sparse_reward: {sparse_reward} broadcast_sparse_ratio: {broadcast_sparse_ratio} reward + sparse_reward: {reward + sparse_reward}")
+            reward = reward + sparse_reward
 
     # This reward will be tracked automatically
     agl.emit_reward(reward)
@@ -327,6 +336,7 @@ def main(
     only_answer_in_gsm=False,
     use_sparse_reward=False,
     max_sparse_reward=0.5,
+    sparse_reward_only_one=False,
 ):
 
     # set name according to paras
@@ -336,6 +346,8 @@ def main(
         experiment_name = f"train_qwen2.5-7b_{method}_"
     elif "train_qwen2.5-7b_normal_kv_8K/global_step_400" in from_model:
         experiment_name = f"train_from_kv_8k_step400_qwen2.5-7b_{method}_"
+    elif "train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_chunk_num_4_agg/global_step_200" in from_model:
+        experiment_name = f"train_from_kv-v2-hop4ans2-16k-4-s200_{method}_"
     else:
         raise NotImplementedError
     verl_config["actor_rollout_ref"]["model"]["path"] = from_model
@@ -364,7 +376,11 @@ def main(
     if only_answer_in_gsm and method == "stream":
         experiment_name = experiment_name + f"only_ans_"
     if use_sparse_reward:
-        experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}_"
+        if sparse_reward_only_one:
+            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}-only-one_" 
+        else:
+            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}_"
+
 
 
     experiment_name = experiment_name.strip("_")
@@ -413,6 +429,7 @@ def main(
         stream_config['algorithm'].only_answer_in_gsm = only_answer_in_gsm
         stream_config['use_sparse_reward'] = use_sparse_reward
         stream_config['max_sparse_reward'] = max_sparse_reward
+        stream_config['sparse_reward_only_one'] = sparse_reward_only_one
 
     elif method == "memagent":
         verl_config["data"]["max_prompt_length"] = 10240

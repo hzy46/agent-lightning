@@ -16,4 +16,5 @@ python train.py --method stream --train_gsm_lengths "[]" \
     --fix_chunk_num 4 \
     --max_rounds 6 \
     --use_sparse_reward True \
-    --max_sparse_reward 0.5
+    --max_sparse_reward 0.15 \
+    --sparse_reward_only_one True
