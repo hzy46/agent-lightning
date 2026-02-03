@@ -37,7 +37,8 @@ def convert_dataframe(df, num_docs):
                 "task_type": "qa",
                 "query": curr_q,
                 "context": context,
-                "ground_truth": curr_a,
+                # for multiple answer
+                "ground_truths": curr_a,
                 "num_docs": num_docs,
             }
         )

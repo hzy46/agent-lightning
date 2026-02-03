@@ -214,7 +214,7 @@ async def solver_agent_stream(task, llm) -> None:
     elif task["task_type"]  == "kv_retrieval" or task["task_type"] == "vt":
         reward = score_func_kv_retrieval(task["response"], task["answers"])
     elif task['task_type'] == 'qa':
-        reward = score_func_qa(task["response"], task["ground_truth"])
+        rewards = max([score_func_qa(task["response"], ground_truth) for ground_truth in task['ground_truths']])
     else:
         raise NotImplementedError
 
