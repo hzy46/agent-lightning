@@ -92,6 +92,20 @@ def generate_input_output(index, num_docs):
     return formatted_output
 
 
+class TqdmExecutor(Executor):
+
+    def __init__(self, max_workers=None, total=None, chunksize=1, **kwargs):
+        """Wrap for tqdm.contrib.concurrent.process_map.
+
+        Args:
+            chunksize (int, optional): The number of tasks to assign to each worker at a time. Defaults to 1.
+            max_workers (int, optional): The maximum number of workers to use. Defaults to None.
+            kwargs: Additional keyword arguments to pass to the map function.
+        """
+        from tqdm.contrib.concurrent import process_map
+        super().__init__(process_map, max_workers=max_workers, chunksize=chunksize, **kwargs)
+
+
 def generate_json(num_samples: int, incremental: int = 10, qas=None, docs=None):
     global QAS, DOCS
     if qas is None or docs is None:
