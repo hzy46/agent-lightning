@@ -152,9 +152,9 @@ Agent Collaboration Stream:
 
 You need to extract all content enclosed in <answer></answer> from the agentic stream, synthesize them into a final answer, and output the result.
 
-Your output format should be <answer>Therefore, the answer is \\boxed{your final answer}.</answer>.
+Your output format should be <answer>Therefore, the answer is \\boxed{{your final answer}}.</answer>.
 
-You MUST follow the format <answer>Therefore, the answer is \\boxed{your final answer}.</answer> without adding anything else.
+You MUST follow the format <answer>Therefore, the answer is \\boxed{{your final answer}}.</answer> without adding anything else.
 """
 
 
