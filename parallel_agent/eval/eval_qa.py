@@ -187,10 +187,10 @@ def main(
 
         for sample in samples:
             score = max([score_func_qa(sample["response"], ground_truth) for ground_truth in sample['ground_truths']])
-            print(sample['response'], sample['ground_truths'], score)
+            # print(sample['response'], sample['ground_truths'], score)
             sample['score'] = score
         
-        print(f"doc_num: {doc_num} score: {score} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
+        print(f"doc_num: {doc_num} score: {np.mean([sample['score'] for sample in samples]):.2f} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
         
         with open(result_save_path, "w") as f:
             if keep_origin is False:
