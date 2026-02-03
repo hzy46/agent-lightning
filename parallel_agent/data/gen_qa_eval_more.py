@@ -1,3 +1,5 @@
+# code adapted from memagent
+
 import os
 import requests
 import sys
@@ -6,8 +8,76 @@ import random
 from multiprocessing import Pool
 import pandas as pd
 from pathlib import Path
+import dill
+import pickle
+from rich import print
 
-# code adapted from memagent
+def map_worker_dill(arg):
+    func, args, const = arg
+    return dill.loads(func)(*args, **const)
+def map_worker_pickle(arg):
+    func, args, const = arg
+    return pickle.loads(func)(*args, **const)
+class Executor:
+    def __init__(self, map_func, **map_func_kwargs):
+        """Wrap for a multiprocessing map function.
+        e.g multiprocessing.Pool.map
+            concurrent.futures.ProcessPoolExecutor.map
+            tqdm.contrib.concurrent.process_map
+
+        Args:
+            map_func (callable): The map function to use.
+            map_func_kwargs (dict): Additional keyword arguments to pass to the map function.
+        """
+        self.map_func = map_func
+        self.map_func_kwargs = map_func_kwargs
+
+    def run(self, func, *iters, **const):
+        """Run the map function with the given arguments.
+
+        Args:
+            func (callable): The function to map. Can be any dill-serializable function.
+            iters (iterable): The iterables to map the function over.
+            const (dict): Constant arguments to pass to the function.
+
+        Returns:
+            _type_: _description_
+        """
+        class MapArgs:
+            def __init__(self, func, *iters, **const):
+                assert isinstance(func, bytes), f"func must be serialized, get func={func}"
+                self.func = func
+                self.iters = iters
+                self.const = const
+
+            def __iter__(self):
+                for args in zip(*self.iters):
+                    yield (self.func, args, self.const) if self.func else (args, self.const)
+            def __len__(self):
+                return len(self.iters[0])
+        try:
+            pickled_func = pickle.dumps(func)
+            print("using pickle to serialize")
+            return self.map_func(map_worker_pickle, MapArgs(pickled_func, *iters, **const), **self.map_func_kwargs)
+        except Exception as e:
+            if "Can't pickle" not in str(e):
+                raise e
+            print("using dill to serialize")
+            return self.map_func(map_worker_dill, MapArgs(dill.dumps(func), *iters, **const), **self.map_func_kwargs)
+
+class TqdmExecutor(Executor):
+
+    def __init__(self, max_workers=None, total=None, chunksize=1, **kwargs):
+        """Wrap for tqdm.contrib.concurrent.process_map.
+
+        Args:
+            chunksize (int, optional): The number of tasks to assign to each worker at a time. Defaults to 1.
+            max_workers (int, optional): The maximum number of workers to use. Defaults to None.
+            kwargs: Additional keyword arguments to pass to the map function.
+        """
+        from tqdm.contrib.concurrent import process_map
+        super().__init__(process_map, max_workers=max_workers, chunksize=chunksize, **kwargs)
+
 # Global variables
 QAS = None
 DOCS = None
@@ -90,20 +160,6 @@ def generate_input_output(index, num_docs):
         "num_docs": num_docs,
     }
     return formatted_output
-
-
-class TqdmExecutor(Executor):
-
-    def __init__(self, max_workers=None, total=None, chunksize=1, **kwargs):
-        """Wrap for tqdm.contrib.concurrent.process_map.
-
-        Args:
-            chunksize (int, optional): The number of tasks to assign to each worker at a time. Defaults to 1.
-            max_workers (int, optional): The maximum number of workers to use. Defaults to None.
-            kwargs: Additional keyword arguments to pass to the map function.
-        """
-        from tqdm.contrib.concurrent import process_map
-        super().__init__(process_map, max_workers=max_workers, chunksize=chunksize, **kwargs)
 
 
 def generate_json(num_samples: int, incremental: int = 10, qas=None, docs=None):
