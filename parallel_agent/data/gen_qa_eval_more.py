@@ -232,7 +232,7 @@ if __name__ == "__main__":
     random.seed(42)
     num_samples = 200
     # 100 is roughly 16K
-    doc_num_list = [100, 800, 1600]
+    doc_num_list = [100, 400, 800, 1600, 3200]
     QAS_dev, DOCS_dev = read_hotpotqa('hotpotqa_dev.json')
     print("overall dev doc num:", len(DOCS_dev))
     for doc_num in doc_num_list:
