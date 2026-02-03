@@ -3,8 +3,6 @@ import requests
 import sys
 
 def download_hotpotqa():
-
-
     files = {
         "hotpotqa_dev.json": "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json",
         "hotpotqa_train.json": "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_train_v1.1.json",
