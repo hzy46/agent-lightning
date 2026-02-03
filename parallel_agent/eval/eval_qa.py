@@ -186,7 +186,7 @@ def main(
         avg_task_time = (end_time - start_time) / len(samples)
 
         for sample in samples:
-            score = max([score_func_qa(task["response"], ground_truth) for ground_truth in task['ground_truths']])
+            score = max([score_func_qa(sample["response"], ground_truth) for ground_truth in sample['ground_truths']])
             sample['score'] = score
         
         print(f"doc_num: {doc_num} score: {score} avg_task_time (this is not latency unless max_workers=1): {avg_task_time:.2f}s")
