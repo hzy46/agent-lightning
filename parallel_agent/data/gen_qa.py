@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from IPython import embed
 
 
 def parse_args():
@@ -77,6 +78,7 @@ def main():
     train_out = out_dir / f"train_doc{num_docs}.json"
     test_out = out_dir / f"test_doc{num_docs}.json"
 
+    embed()
     with open(train_out, "w", encoding="utf-8") as f:
         json.dump(train_data, f)
 
