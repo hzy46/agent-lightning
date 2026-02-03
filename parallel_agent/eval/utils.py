@@ -2,6 +2,7 @@ import re
 from collections import Counter
 import string
 import os
+from hotpotqa_verifier import compute_score as hotpotqa_verifier_compute_score
 
 def extract_answer(response):
     response = response.replace('*', '')
@@ -196,3 +197,7 @@ def score_func_kv_retrieval(response, answers):
     response_list = response.split(",")
     response_list = [res.strip() for res in response_list if res.strip()]
     return len(set(response_list).intersection(set(answers))) / len(set(response_list).union(set(answers)))
+
+
+def compute_score(response, ground_truth):
+    return hotpotqa_verifier_compute_score(response, ground_truth)
