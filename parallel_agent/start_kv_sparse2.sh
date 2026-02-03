@@ -14,16 +14,15 @@ DST="$HOME/train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_ch
 # 2. 如果目标目录已存在，则不拷贝
 if [[ -d "$DST" ]]; then
   echo "目标目录已存在，跳过拷贝：$DST"
-  exit 0
+else    
+    # 3. 创建 DST 的父目录（如果不存在）
+    mkdir -p "$(dirname "$DST")"
+
+    # 4. 拷贝目录
+    cp -r "$SRC" "$DST"
+    echo "拷贝完成：$SRC -> $DST"
 fi
 
-# 3. 创建 DST 的父目录（如果不存在）
-mkdir -p "$(dirname "$DST")"
-
-# 4. 拷贝目录
-cp -r "$SRC" "$DST"
-
-echo "拷贝完成：$SRC -> $DST"
 
 
 export NCCL_CUMEM_HOST_ENABLE=0
