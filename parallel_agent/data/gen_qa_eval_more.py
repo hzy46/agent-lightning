@@ -117,7 +117,6 @@ def generate_json(num_samples: int, incremental: int = 10, qas=None, docs=None):
     length = min(num_samples, len(QAS))
     print("start")
     
-    from utils import TqdmExecutor
     write_jsons = TqdmExecutor(max_workers=os.cpu_count()).run(generate_input_output, range(length), num_docs=incremental)
 
     save_dir = os.path.expanduser("~/qa_eval_more")
