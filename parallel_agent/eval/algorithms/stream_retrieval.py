@@ -250,6 +250,8 @@ class Stream(object):
         broadcast = extract_tag(response, "broadcast")
         if answer is None:
             self.answer = ""
+        elif answer == "":
+            self.answer = "N/A" # corner case, if use "", then the stream will not be ended
         else:
             self.answer = answer
         # if the stream decides to answer, end it

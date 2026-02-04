@@ -382,9 +382,9 @@ def main(
         experiment_name = experiment_name + f"only_ans_"
     if use_sparse_reward:
         if sparse_reward_only_one:
-            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}-only-one_" 
+            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.3f}-only-one_" 
         else:
-            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.2f}_"
+            experiment_name = experiment_name + f"max-sp-re{max_sparse_reward:.3f}_"
 
 
 

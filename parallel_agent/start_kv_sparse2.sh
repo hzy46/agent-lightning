@@ -42,4 +42,5 @@ python train.py --method stream --train_gsm_lengths "[]" \
     --max_rounds 6 \
     --use_sparse_reward True \
     --max_sparse_reward 0.15 \
-    --from_model $DST
+    --from_model $DST \
+    --sparse_reward_only_one True
