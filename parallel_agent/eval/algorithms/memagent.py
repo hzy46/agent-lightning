@@ -80,7 +80,7 @@ template_final_qa = """You are presented with a problem and a previous memory. P
 {memory}
 </memory>
 
-Format your answer in \\boxed{}, e.g. \\boxed{your answer}.
+Format your answer in \\boxed{{}}, e.g. \\boxed{{your answer}}.
 """
 
 
