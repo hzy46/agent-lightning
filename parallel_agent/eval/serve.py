@@ -1,6 +1,9 @@
 import os
 import subprocess
 
+DASH_PORT = 8256
+SERVE_PORT = 8000
+
 def auto_serve(model, wait=True):
     serve_script = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "llm070.py"))
     cmd = f"python {serve_script} --model {model} --tp 1"
