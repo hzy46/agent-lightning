@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 DASH_PORT = 8256
 SERVE_PORT = 8000
@@ -10,7 +11,8 @@ def auto_serve(model, wait=True):
     print("serving command:")
     print(cmd)
     if wait:
-        os.system(f"yes | serve shutdown -a http://localhost:{DASH_PORT}")
+        subprocess.run(["ray", "stop"], check=True)
+        time.sleep(3)
         # setsid so that it can be interrupted
         serve_p = subprocess.Popen(cmd.split(), preexec_fn=os.setsid)
         while True:
