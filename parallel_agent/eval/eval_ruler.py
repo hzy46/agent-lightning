@@ -15,6 +15,7 @@ from algorithms.normal import fill_in_response as normal_fill_in_response
 from algorithms.memagent import async_fill_in_response_with_sem as memagent_async_fill_in_response_with_sem
 from algorithms.parallel import async_fill_in_response_with_sem as parallel_async_fill_in_response_with_sem
 from algorithms.stream_retrieval import async_fill_in_response_with_sem as stream_async_fill_in_response_with_sem, ModelConfig as StreamModelConfig, AlgorithmConfig as StreamAlgorithmConfig
+from serve import auto_serve
 
 def main(
     model="Qwen/Qwen2.5-7B-Instruct-1M",
@@ -46,6 +47,7 @@ def main(
     chunk_size=5000,
     fix_chunk_num=None,
 ):
+    auto_serve(model)
     base_dir = os.path.expanduser("~/ruler_from_memagent")
     context_length_str_to_num = {
         "8K": 8192,
