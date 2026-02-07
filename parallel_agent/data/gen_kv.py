@@ -98,22 +98,28 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_hop_num", type=int, default=2)
+    parser.add_argument("--min_hop_num", type=int, default=1)
     parser.add_argument("--max_answer_num", type=int, default=2)
     args = parser.parse_args()
 
     max_hop_num = args.max_hop_num
     max_answer_num = args.max_answer_num
+    min_hop_num = args.min_hop_num
 
-    save_dir = os.path.expanduser(
-        f"~/multi_hop_kv_retrieval_v2_maxhop{max_hop_num}_maxans{max_answer_num}"
-    )
+    if min_hop_num != 1:
+        save_dir = os.path.expanduser(
+            f"~/multi_hop_kv_retrieval_v2_minhop{min_hop_num}_maxhop{max_hop_num}_maxans{max_answer_num}"
+        )
+    else:
+        save_dir = os.path.expanduser(
+            f"~/multi_hop_kv_retrieval_v2_maxhop{max_hop_num}_maxans{max_answer_num}"
+        )
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     train_num = 5000
     test_num = 300
 
-    min_hop_num = 1
     min_answer_num = 1
 
     for length_str in ["8K", "16K"]:
