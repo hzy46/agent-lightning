@@ -9,7 +9,9 @@ def extract_answer(response):
     if "the answer is" in response:
         ans = response.rsplit("the answer is", 1)[-1].strip().replace("<｜Assistant｜>", '').replace("<｜end▁of▁sentence｜>", '').strip().strip('.').strip()
     else:
-        ans = None
+        # ans = None will be too strict here, as sometimes the answer will be formulated as "Therefore, the special magic numbers for XXX are"
+        # we keep the same test criterion for all methods.
+        ans = response.strip()
     return ans
 
 def extract_solution(solution_str):
