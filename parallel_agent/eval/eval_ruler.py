@@ -46,11 +46,15 @@ def main(
     max_rounds=3,
     chunk_size=5000,
     fix_chunk_num=None,
+    skip_auto_server=False,
 ):
     if "ENABLE_SHARD_SERVER" in os.environ and os.environ["ENABLE_SHARD_SERVER"].strip() == "1":
         print("use shard server, skip starting server")
     else:
-        auto_serve(model)
+        if skip_auto_server:
+            pass
+        else:
+            auto_serve(model)
     base_dir = os.path.expanduser("~/ruler_from_memagent")
     context_length_str_to_num = {
         "8K": 8192,
