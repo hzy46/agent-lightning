@@ -67,16 +67,28 @@ def main(
     }
     tokenizer = AutoTokenizer.from_pretrained(model)
 
-    if "global_step_" in model:
-        model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
-        model = model.strip("/").split("/")[-1] 
-    elif os.path.exists(model):
-        # it is a path
-        model = model.strip("/").split("/")[-1]
-        model_save_name = model.lower()
+    if "ENABLE_SHARD_SERVER" in os.environ and os.environ["ENABLE_SHARD_SERVER"].strip() == "1":
+        if "global_step_" in model:
+            model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
+            model = model
+        elif os.path.exists(model):
+            # it is a path
+            model = model.strip("/").split("/")[-1]
+            model_save_name = model.lower()
+        else:
+            model_save_name = model.split("/")[-1].lower()
+        print("model_save_name", model_save_name)
     else:
-        model_save_name = model.split("/")[-1].lower()
-    print("model_save_name", model_save_name)
+        if "global_step_" in model:
+            model_save_name = model.strip("/").split("/")[-2].lower() + "_step" + model[model.find("global_step_") + len("global_step_"):].strip("/")
+            model = model.strip("/").split("/")[-1] 
+        elif os.path.exists(model):
+            # it is a path
+            model = model.strip("/").split("/")[-1]
+            model_save_name = model.lower()
+        else:
+            model_save_name = model.split("/")[-1].lower()
+        print("model_save_name", model_save_name)
 
     api_root_url = "http://localhost:8000/v1"
     
