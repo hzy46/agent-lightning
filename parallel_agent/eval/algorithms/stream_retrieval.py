@@ -287,7 +287,7 @@ async def call_llm(model_config, messages, log_dict, shard_index=None) -> str:
     session = await get_async_client()
 
     if "ENABLE_SHARD_SERVER" in os.environ and os.environ["ENABLE_SHARD_SERVER"].strip() == "1":
-        shard_server_n = int(os["SHARD_SERVER_N"])
+        shard_server_n = int(os.environ["SHARD_SERVER_N"])
         if shard_index is not None:
             port = 8000 + shard_index % shard_server_n
         else:
