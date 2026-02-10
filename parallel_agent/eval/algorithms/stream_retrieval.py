@@ -3,6 +3,7 @@ import re
 import random
 import aiohttp
 import copy
+import os
 
 async def get_async_client():
     return aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=86400))
@@ -239,7 +240,7 @@ class Stream(object):
             self.received_answer_information = ""
 
         self.is_round_active = True
-        response = await call_llm(model_config, self.messages, log_dict)
+        response = await call_llm(model_config, self.messages, log_dict, self.chunk_index)
         self.messages.append({
             "role": "assistant",
             "content": response,
@@ -281,12 +282,24 @@ class Stream(object):
         return '\n'.join(content_list)      
 
 
-async def call_llm(model_config, messages, log_dict) -> str:
+async def call_llm(model_config, messages, log_dict, shard_index=None) -> str:
     top_p = 1
     session = await get_async_client()
+
+    if "ENABLE_SHARD_SERVER" in os.environ and os.environ["ENABLE_SHARD_SERVER"].strip() == "1":
+        shard_server_n = int(os["SHARD_SERVER_N"])
+        if shard_index is not None:
+            port = 8000 + shard_index % shard_server_n
+        else:
+            port = 8000 + random.randint(0, shard_server_n - 1)
+        api_root_url = f"http://localhost:{port}/v1"
+        print(f"sharded server, requesting {api_root_url}")
+    else:
+        api_root_url = model_config.api_root_url
+
     async with session:
         async with session.post(
-            url= model_config.api_root_url + "/chat/completions",
+            url= api_root_url + "/chat/completions",
             headers={"Authorization": f"Bearer dummy"},
             json=dict(model=model_config.model,
                 messages=messages,
