@@ -293,7 +293,7 @@ async def call_llm(model_config, messages, log_dict, shard_index=None) -> str:
         else:
             port = 8000 + random.randint(0, shard_server_n - 1)
         api_root_url = f"http://localhost:{port}/v1"
-        print(f"sharded server, requesting {api_root_url}")
+        # print(f"sharded server, requesting {api_root_url}")
     else:
         api_root_url = model_config.api_root_url
 
