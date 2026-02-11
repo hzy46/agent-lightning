@@ -426,7 +426,7 @@ def main(
         if max_rounds >= 6 and max_rounds <= 8:
             verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 2
         elif max_rounds > 8:
-            verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 1
+            verl_config["actor_rollout_ref"]['actor']['ppo_micro_batch_size_per_gpu'] = 2
 
         stream_config['use_token_penalty'] = use_token_penalty
         stream_config['token_penalty_L'] = token_penalty_L
