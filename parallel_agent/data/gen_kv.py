@@ -100,12 +100,24 @@ if __name__ == "__main__":
     parser.add_argument("--max_hop_num", type=int, default=2)
     parser.add_argument("--min_hop_num", type=int, default=1)
     parser.add_argument("--max_answer_num", type=int, default=2)
+    parser.add_argument("--min_answer_num", type=int, default=1)
     args = parser.parse_args()
 
     max_hop_num = args.max_hop_num
     max_answer_num = args.max_answer_num
     min_hop_num = args.min_hop_num
+    min_answer_num = args.min_answer_num
 
+
+
+    if min_answer_num != 1 and min_hop_num != 1:
+        save_dir = os.path.expanduser(
+            f"~/multi_hop_kv_retrieval_v2_minhop{min_hop_num}_maxhop{max_hop_num}_minans{min_answer_num}_maxans{max_answer_num}"
+        )
+    elif min_answer_num != 1:
+        save_dir = os.path.expanduser(
+            f"~/multi_hop_kv_retrieval_v2_maxhop{max_hop_num}_minans{min_answer_num}_maxans{max_answer_num}"
+        )
     if min_hop_num != 1:
         save_dir = os.path.expanduser(
             f"~/multi_hop_kv_retrieval_v2_minhop{min_hop_num}_maxhop{max_hop_num}_maxans{max_answer_num}"
@@ -119,8 +131,6 @@ if __name__ == "__main__":
 
     train_num = 5000
     test_num = 300
-
-    min_answer_num = 1
 
     for length_str in ["8K", "16K"]:
         train_save_path = os.path.join(
