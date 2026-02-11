@@ -129,6 +129,8 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
+    print(save_dir)
+
     train_num = 5000
     test_num = 300
 
