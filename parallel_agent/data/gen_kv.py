@@ -118,7 +118,7 @@ if __name__ == "__main__":
         save_dir = os.path.expanduser(
             f"~/multi_hop_kv_retrieval_v2_maxhop{max_hop_num}_minans{min_answer_num}_maxans{max_answer_num}"
         )
-    if min_hop_num != 1:
+    elif min_hop_num != 1:
         save_dir = os.path.expanduser(
             f"~/multi_hop_kv_retrieval_v2_minhop{min_hop_num}_maxhop{max_hop_num}_maxans{max_answer_num}"
         )
