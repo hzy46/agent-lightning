@@ -351,7 +351,7 @@ def main(
         experiment_name = f"train_from_kv_8k_step400_qwen2.5-7b_{method}_"
     elif "train_qwen2.5-7b_stream_kv_v2_maxhop4_maxans2_16K_max_rounds_6_fix_chunk_num_4_agg/global_step_200" in from_model:
         experiment_name = f"train_from_kv-v2-hop4ans2-16k-4-s200_{method}_"
-    elif "train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16k_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100" in from_model:
+    elif "train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16K_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100" in from_model:
         experiment_name = f"train_from_kv-hop2-6-ans1-sparse-s100_{method}_"
     else:
         raise NotImplementedError

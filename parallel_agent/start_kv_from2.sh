@@ -6,8 +6,8 @@ if [[ -z "${ZHIYUHE:-}" ]]; then
   exit 1
 fi
 
-SRC="$ZHIYUHE/models/train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16k_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100"
-DST="$HOME/train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16k_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100"
+SRC="$ZHIYUHE/models/train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16K_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100"
+DST="$HOME/train_qwen2.5-7b_stream_kv_v2_minhop2_maxhop6_maxans1_16K_max_rounds_8_fix_chunk_num_4_agg_max-sp-re0.150-only-one/global_step_100"
 
 # 2. 如果目标目录已存在，则不拷贝
 if [[ -d "$DST" ]]; then
